@@ -6,26 +6,26 @@
 #include <cstring>
 
 /*
- * CppUTest fuerza `#define new new(__FILE__, __LINE__)` a través de
- * MemoryLeakDetectorNewMacros.h (incluido desde TestHarness.h). Como el
- * proyecto compila con detección de fugas de CppUTest desactivada
- * (MEMORY_LEAK_DETECTION OFF), nadie provee el operador `new` de posicionamiento
- * que requiere esa macro. Se anula aquí, solo en las unidades de traducción de
- * las pruebas, para usar el `new` ordinario de la biblioteca estándar.
+ * CppUTest forces `#define new new(__FILE__, __LINE__)` through
+ * MemoryLeakDetectorNewMacros.h (included from TestHarness.h). As the
+ * project compiles with CppUTest leak detection disabled
+ * (MEMORY_LEAK_DETECTION OFF), no one provides the placement `new` operator
+ * required by that macro. It is undefined here, only in test translation
+ * units, to use the ordinary `new` from the standard library.
  */
 #undef new
 
 TEST_GROUP(CounterIntegration) {};
 
 /*
- * Prueba de integracion: valida la interaccion de dos instancias de Counter
- * y la persistencia del resultado en un archivo temporal.
+ * Integration test: validates interaction of two Counter instances and
+ * persistence of the result in a temporary file.
  *
- * Requisitos de la seccion 5.2 del AgentGuide.md:
- *   - Independiente de otras pruebas.
- *   - Limpia el recurso temporal que crea.
- *   - No depende del orden de ejecucion.
- *   - No modifica datos de produccion.
+ * Requirements from section 5.2 of AgentGuide.md:
+ *   - Independent of other tests.
+ *   - Cleans up the temporary resource it creates.
+ *   - Does not depend on execution order.
+ *   - Does not modify production data.
  */
 TEST(CounterIntegration, TwoCountersInteractingAndFilePersistence) {
     Counter counterA(3);

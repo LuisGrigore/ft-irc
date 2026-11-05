@@ -1,12 +1,12 @@
 #include "CppUTest/CommandLineTestRunner.h"
 
 /*
- * CppUTest fuerza `#define new new(__FILE__, __LINE__)` a través de
- * MemoryLeakDetectorNewMacros.h (incluido desde TestHarness.h). Como el
- * proyecto compila con detección de fugas de CppUTest desactivada
- * (MEMORY_LEAK_DETECTION OFF), se anula la macro para usar el `new` ordinario
- * de la biblioteca estándar. Este archivo no usa `new`, pero se anula por
- * coherencia con las unidades de traducción de las pruebas.
+ * CppUTest forces `#define new new(__FILE__, __LINE__)` through
+ * MemoryLeakDetectorNewMacros.h (included from TestHarness.h). As the
+ * project compiles with CppUTest leak detection disabled
+ * (MEMORY_LEAK_DETECTION OFF), the macro is undefined to use the ordinary
+ * `new` from the standard library. This file does not use `new`, but it is
+ * undefined for consistency with test translation units.
  */
 #undef new
 

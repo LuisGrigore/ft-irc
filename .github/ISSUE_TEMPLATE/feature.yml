@@ -1,22 +1,23 @@
-name: "Nueva Feature"
-description: "Crea una feature de alto nivel con sus acceptance criteria y tasks asociadas"
-title: "[FEAT] <título de la feature>"
+name: "New Feature"
+description: "Create a high-level feature with its acceptance criteria and associated tasks"
+title: "[FEAT] <feature title>"
 labels: ["feature", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        # Plantilla de Feature
+        # Feature Template
 
-        Una **feature** es una unidad de trabajo que se implementa en una rama `feature/`.
-        Cada feature tiene un **ID de trazabilidad** (ej. `FEAT-001`) y una lista de **acceptance criteria** (ej. `AC-001`, `AC-002`).
-        Las tasks que la componen son subissues de esta feature.
+        A **feature** is a top-level unit of work implemented on a `feature/` branch.
+        Each feature has a **traceability ID** (e.g. `FEAT-001`) and a list of
+        **acceptance criteria** (e.g. `AC-001`, `AC-002`).
+        The tasks composing it are sub-issues of this feature.
 
   - type: input
     id: feat-id
     attributes:
-      label: "ID de trazabilidad (Feature)"
-      description: "Ejemplo: FEAT-001. Úsalo para referenciar esta feature en commits, ramas y PRs."
+      label: "Feature traceability ID"
+      description: "Example: FEAT-001. Use it to reference this feature in commits, branches and PRs."
       placeholder: "FEAT-001"
     validations:
       required: true
@@ -24,20 +25,20 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: "Descripción de la feature"
-      placeholder: "¿Qué se va a implementar y por qué?"
+      label: "Feature description"
+      placeholder: "What will be implemented and why?"
     validations:
       required: true
 
   - type: textarea
     id: acceptance-criteria
     attributes:
-      label: "Acceptance criteria (criterios de aceptación)"
+      label: "Acceptance criteria"
       description: |
-        Lista los criterios de aceptación, uno por línea, con su propio ID de trazabilidad.
-        Ejemplo:
-        - AC-001: El módulo compila con C++98 y -Werror.
-        - AC-002: Todas las pruebas unitarias pasan.
+        List acceptance criteria, one per line, each with its own traceability ID.
+        Example:
+        - AC-001: The module compiles with C++98 and -Werror.
+        - AC-002: All unit tests pass.
       placeholder: |
         - AC-001: ...
         - AC-002: ...
@@ -47,12 +48,13 @@ body:
   - type: textarea
     id: tasks
     attributes:
-      label: "Tasks asociadas (subissues)"
+      label: "Associated tasks (sub-issues)"
       description: |
-        Enumera las tasks que desglosan esta feature. Cada task será un issue separado de tipo "Task" con este feature como padre.
-        Ejemplo:
-        - T-001: Implementar clase Counter.
-        - T-002: Escribir pruebas unitarias.
+        List the tasks that break down this feature. Each task will be a separate
+        issue of type "Task" with this feature as parent.
+        Example:
+        - T-001: Implement Counter class.
+        - T-002: Write unit tests.
       placeholder: |
         - T-001: ...
         - T-002: ...
@@ -60,18 +62,18 @@ body:
   - type: dropdown
     id: complexity
     attributes:
-      label: "Complejidad estimada"
+      label: "Estimated complexity"
       options:
-        - "Baja"
-        - "Media"
-        - "Alta"
+        - "Low"
+        - "Medium"
+        - "High"
     validations:
       required: false
 
   - type: checkboxes
     id: ready
     attributes:
-      label: "Confirmación"
+      label: "Confirmation"
       options:
-        - label: "He revisado que no existe ya una issue con la misma funcionalidad."
+        - label: "I have verified that no issue with the same functionality already exists."
           required: true

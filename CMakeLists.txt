@@ -2,45 +2,45 @@ cmake_minimum_required(VERSION 3.11)
 project(ft_irc CXX)
 
 # -----------------------------------------------------------------------------
-# Estandar de C++: C++98 es obligatorio (AgentGuide.md, seccion 2).
-#   - C++98 como estandar requerido.
-#   - Sin extensiones del compilador.
-#   - Sin uso accidental de C++11 o posterior.
+# C++ standard: C++98 is mandatory (AgentGuide.md, section 2).
+#   - C++98 as required standard.
+#   - No compiler extensions.
+#   - No accidental use of C++11 or later.
 # -----------------------------------------------------------------------------
 set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
-    # -Wall -Wextra -Werror -std=c++98, tal como exige el proyecto.
-    # -Wpedantic se mantiene para detectar extensiones del compilador.
+    # -Wall -Wextra -Werror -std=c++98, as required by the project.
+    # -Wpedantic is kept to detect compiler extensions.
     set(PROJECT_WARNING_FLAGS -Wall -Wextra -Werror -Wpedantic -std=c++98)
 else()
     set(PROJECT_WARNING_FLAGS "")
 endif()
 
-option(ENABLE_SANITIZERS "Habilitar AddressSanitizer y UndefinedBehaviorSanitizer" OFF)
+option(ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 
 # -----------------------------------------------------------------------------
-# Dependencia: CppUTest 3.8 (ultima version compatible con C++98; la rama 4.x
-# requiere C++11). Se descarga y compila como parte del proyecto con
-# FetchContent para no exigir paquetes de sistema ocultos. Una clonacion
-# limpia mas red y cmake es suficiente para construir y probar.
+# Dependency: CppUTest 3.8 (latest version compatible with C++98; branch 4.x
+# requires C++11). It is downloaded and compiled as part of the project using
+# FetchContent so that no hidden system packages are required. A clean clone
+# with network and cmake is enough to build and test.
 #
-# Opciones intencionales para mantener el control de esta compilacion:
-#   TESTS OFF: no se compilan los tests propios de CppUTest.
-#   CPPUTEST_FLAGS OFF: CppUTest no inyecta flags globales en nuestra build.
-#   C++11 OFF: CppUTest se compila estrictamente en C++98.
-#   MEMORY_LEAK_DETECTION OFF: Valgrind y los sanitizadores son las
-#         herramientas de comprobacion de memoria del proyecto.
+# Intentional options to keep control of this build:
+#   TESTS OFF: do not compile CppUTest's own tests.
+#   CPPUTEST_FLAGS OFF: CppUTest does not inject global flags into our build.
+#   C++11 OFF: CppUTest is compiled strictly in C++98.
+#   MEMORY_LEAK_DETECTION OFF: Valgrind and the sanitizers are the project's
+#         memory checking tools.
 # -----------------------------------------------------------------------------
 include(FetchContent)
 
-# CppUTest 3.8 requiere cmake_minimum_required(VERSION 2.8.7), cuya compatibilidad
-# fue eliminada en CMake 4.x. Se solicita al menos la política 3.5 para poder
-# incluirlo con este CMake.
+# CppUTest 3.8 requires cmake_minimum_required(VERSION 2.8.7), whose compatibility
+# was removed in CMake 4.x. At least policy 3.5 is requested to include it
+# with this CMake.
 if(NOT CMAKE_POLICY_VERSION_MINIMUM)
-    set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Versión mínima de políticas de CMake" FORCE)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum CMake policy version" FORCE)
 endif()
 
 set(TESTS OFF CACHE BOOL "" FORCE)
@@ -58,15 +58,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(cpputest)
 
-# Evitar el kludge roto de va_copy de CppUTest 3.8 en toolchains modernas:
-# forzar una definición correcta antes de compilar sus fuentes.
+# Avoid the broken va_copy kludge of CppUTest 3.8 on modern toolchains:
+# force a correct definition before compiling its sources.
 target_compile_options(CppUTest PRIVATE
     -include ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpputest_compat.h)
 target_compile_options(CppUTestExt PRIVATE
     -include ${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpputest_compat.h)
 
 # -----------------------------------------------------------------------------
-# Biblioteca de produccion
+# Production library
 # -----------------------------------------------------------------------------
 add_library(counter STATIC src/counter.cpp)
 target_include_directories(counter PUBLIC include)
@@ -78,7 +78,7 @@ if(ENABLE_SANITIZERS AND (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$"))
 endif()
 
 # -----------------------------------------------------------------------------
-# Pruebas (unitarias y de integracion)
+# Tests (unit and integration)
 # -----------------------------------------------------------------------------
 include(CTest)
 enable_testing()

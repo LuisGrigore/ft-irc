@@ -1,52 +1,52 @@
-# Plantilla de Pull Request
+# Pull Request Template
 
-## Tipo de PR
-Marca con una `x` el tipo correspondiente:
+## PR type
+Mark with an `x` the corresponding type:
 
-- [ ] `feature` — implementa una feature nueva (rama `feature/`)
-- [ ] `hotfix` — arreglo puntual de un bug (rama `hotfix/`)
-- [ ] `devops` — infraestructura, CI, scripts, documentación o configuración del repositorio (rama `devops/`)
-- [ ] `release` — sincroniza `develop` hacia `main` (rama `release/`)
+- [ ] `feature` — implements a new feature (branch `feature/`)
+- [ ] `hotfix` — one-off bug fix (branch `hotfix/`)
+- [ ] `devops` — infrastructure, CI, scripts, documentation or repository configuration (branch `devops/`)
+- [ ] `release` — synchronizes `develop` into `main` (branch `release/`)
 
-## Rama origen y destino
+## Source and target branches
 
-- **Rama origen:** `feature/…`, `hotfix/…`, `devops/…` o `release/…`
-- **Rama destino:** `develop` (para feature/hotfix/devops) o `main` (para release)
+- **Source branch:** `feature/…`, `hotfix/…`, `devops/…` or `release/…`
+- **Target branch:** `develop` (for feature/hotfix/devops) or `main` (for release)
 
-## Issue(s) relacionado(s)
+## Related issue(s)
 
-Indica el ID de trazabilidad de la issue que cierra este PR:
+Indicate the traceability ID of the issue closed by this PR:
 
 - Feature: `FEAT-001`
 - Task: `T-001`
 - Hotfix: `HOTFIX-001`
 
-> Ejemplo: `Closes #123 — FEAT-001`
+> Example: `Closes #123 — FEAT-001`
 
-## Acceptance criteria completadas
+## Acceptance criteria completed
 
-Lista los IDs de aceptación que se cumplen con este PR:
+List the acceptance criteria IDs fulfilled by this PR:
 
 - [ ] `AC-001` — …
 - [ ] `AC-002` — …
 
-## Cambios realizados
+## Changes made
 
-Describe brevemente qué se modificó, añadió o eliminó.
+Briefly describe what was modified, added or removed.
 
-## Lista de verificación antes de pedir revisión
+## Checklist before requesting review
 
-- [ ] Se creó la rama desde `develop` (`git checkout develop && git pull && git checkout -b feature/…`)
-- [ ] El código cumple C++98 (`-std=c++98`, sin `unique_ptr`, lambdas, `auto`, etc.)
-- [ ] Se compiló con `-Wall -Wextra -Werror -Wpedantic -std=c++98`
-- [ ] `make build` termina sin errores
-- [ ] `make test` pasa (unit + integration)
-- [ ] `make valgrind` pasa sin fugas ni errores
-- [ ] `make sanitize` pasa (si aplica)
-- [ ] Se actualizó la documentación si es necesario
-- [ ] Se usaron los IDs de trazabilidad en commits y mensajes
+- [ ] Branch created from `develop` (`git checkout develop && git pull && git checkout -b feature/…`)
+- [ ] Code complies with C++98 (`-std=c++98`, no `unique_ptr`, lambdas, `auto`, etc.)
+- [ ] Compiled with `-Wall -Wextra -Werror -Wpedantic -std=c++98`
+- [ ] `make build` completes without errors
+- [ ] `make test` passes (unit + integration)
+- [ ] `make valgrind` passes with no leaks or errors
+- [ ] `make sanitize` passes (if applicable)
+- [ ] Documentation updated if necessary
+- [ ] Traceability IDs used in commit messages and PR description
 
-## Instrucciones para el merge
+## Merge instructions
 
-- **Para PRs de tipo `feature`, `hotfix` o `devops`:** fusionar hacia `develop`, **eliminar la rama** tras el merge y **cerrar el issue correspondiente** (feature/task/hotfix) cuando se completen todas sus acceptance criteria.
-- **Para PRs de tipo `release`:** fusionar `develop` hacia `main` (sincronización directa, no hay pipeline de releases). Tras el merge, crear una etiqueta de versión en `main`.
+- **For PRs of type `feature`, `hotfix` or `devops`:** merge into `develop`, **delete the branch** after merge, and **close the corresponding issue** (feature/task/hotfix) when all its acceptance criteria are completed.
+- **For PRs of type `release`:** merge `develop` into `main` (direct synchronization, no release pipeline). After merge on `main`, create a version tag (e.g. `v1.0.0`).
