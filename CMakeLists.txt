@@ -12,7 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$")
-    set(PROJECT_WARNING_FLAGS -Wall -Wextra -Wpedantic)
+    # -Wall -Wextra -Werror -std=c++98, tal como exige el proyecto.
+    # -Wpedantic se mantiene para detectar extensiones del compilador.
+    set(PROJECT_WARNING_FLAGS -Wall -Wextra -Werror -Wpedantic -std=c++98)
 else()
     set(PROJECT_WARNING_FLAGS "")
 endif()

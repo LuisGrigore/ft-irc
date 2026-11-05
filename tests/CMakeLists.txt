@@ -9,15 +9,14 @@ if(ENABLE_SANITIZERS AND (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$"))
     set(TEST_LINK_SANITIZER_FLAGS -fsanitize=address,undefined)
 endif()
 
-set(CPPUTEST_INCLUDE_DIRS
-    ${cpputest_SOURCE_DIR}/include
-    ${cpputest_SOURCE_DIR}/CppUTestExt/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../include
-)
+# Cabeceras de CppUTest (dependencia externa) se marcan como cabeceras del
+# sistema: -Werror no se aplica a sus propias advertencias, solo al codigo del
+# proyecto. El include de produccion del proyecto no es SYSTEM.
+set(PROJECT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 add_executable(unit_tests unit/test_counter.cpp test_main.cpp)
 target_link_libraries(unit_tests PRIVATE counter CppUTestExt CppUTest)
-target_include_directories(unit_tests PRIVATE ${CPPUTEST_INCLUDE_DIRS})
+target_include_directories(unit_tests PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_compile_options(unit_tests PRIVATE ${TEST_WARNING_FLAGS} ${TEST_COMPILE_SANITIZER_FLAGS})
 if(TEST_LINK_SANITIZER_FLAGS)
     target_link_options(unit_tests PRIVATE ${TEST_LINK_SANITIZER_FLAGS})
@@ -25,11 +24,24 @@ endif()
 
 add_executable(integration_tests integration/test_counter_integration.cpp test_main.cpp)
 target_link_libraries(integration_tests PRIVATE counter CppUTestExt CppUTest)
-target_include_directories(integration_tests PRIVATE ${CPPUTEST_INCLUDE_DIRS})
+target_include_directories(integration_tests PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_compile_options(integration_tests PRIVATE ${TEST_WARNING_FLAGS} ${TEST_COMPILE_SANITIZER_FLAGS})
 if(TEST_LINK_SANITIZER_FLAGS)
     target_link_options(integration_tests PRIVATE ${TEST_LINK_SANITIZER_FLAGS})
 endif()
+
+# Cabeceras de CppUTest (dependencia externa) como cabeceras del sistema:
+# -isystem suprime sus advertencias bajo -Werror, manteniendo -Werror estricto
+# para el codigo del proyecto. set_source_files_properties solo afecta a la
+# compilacion, nunca al enlazador (evitando que -isystem se pase como archivo
+# de entrada al linker).
+set_source_files_properties(
+    unit/test_counter.cpp
+    integration/test_counter_integration.cpp
+    test_main.cpp
+    PROPERTIES
+    COMPILE_FLAGS "-isystem ${cpputest_SOURCE_DIR}/include -isystem ${cpputest_SOURCE_DIR}/CppUTestExt/include"
+)
 
 add_test(NAME unit_tests COMMAND unit_tests)
 add_test(NAME integration_tests COMMAND integration_tests)
