@@ -1,0 +1,64 @@
+name: "Hotfix / Bug crítico"
+description: "Reporta un bug que requiere un arreglo puntual (rama hotfix/)"
+title: "[HOTFIX] <título del hotfix>"
+labels: ["hotfix", "bug", "urgente"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Plantilla de Hotfix
+
+        Un **hotfix** es un arreglo puntual que se implementa en una rama `hotfix/`.
+        Tiene un **ID de trazabilidad** (ej. `HOTFIX-001`) y **acceptance criteria** para validar que el bug queda resuelto.
+
+  - type: input
+    id: hotfix-id
+    attributes:
+      label: "ID de trazabilidad (Hotfix)"
+      description: "Ejemplo: HOTFIX-001."
+      placeholder: "HOTFIX-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Descripción del bug"
+      placeholder: "¿Qué falla, en qué versión y cómo se reproduce?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Impacto y urgencia"
+      placeholder: "¿Qué usuarios o funcionalidades se ven afectados?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria (criterios de aceptación)"
+      description: |
+        Criterios que deben cumplirse para considerar el hotfix resuelto.
+        Ejemplo:
+        - AC-010: El flujo afectado vuelve a funcionar.
+        - AC-011: No hay regresiones en `make test`.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Severidad"
+      options:
+        - "Crítica"
+        - "Alta"
+        - "Media"
+        - "Baja"
+    validations:
+      required: true

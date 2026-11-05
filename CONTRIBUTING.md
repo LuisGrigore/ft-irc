@@ -4,34 +4,113 @@ Documento practico para incorporarse al proyecto. El proyecto esta escrito en
 **C++98** y usa CMake, CTest, CppUTest, Valgrind y GitHub Actions (según el
 `AgentGuide.md`).
 
-## Empezar
+## Organiza del trabajo: Features, Tasks y acceptance criteria
 
-1. Clonar el repositorio.
-2. Ejecutar `make build` para configurar y compilar.
-3. Ejecutar `make test` para correr todas las pruebas.
+Todo el trabajo se organiza en **issues** con **IDs de trazabilidad** para
+poder referenciarlos desde commits, ramas y pull requests.
 
-Un clon limpio debe ser suficiente para construir y probar el proyecto.
+### Tipos de issue
 
-## Crear una rama de funcionalidad
+| Tipo | ID de ejemplo | Rama asociada | Descripción |
+|---|---|---|---|
+| Feature | `FEAT-001` | `feature/…` | Unidad de trabajo de alto nivel. Tiene acceptance criteria y puede desglosarse en tasks. |
+| Task | `T-001` | `feature/…` (de su feature padre) | Unidad de trabajo menor. Es un **subissue** de una feature padre. |
+| Hotfix | `HOTFIX-001` | `hotfix/…` | Arreglo puntual de un bug crítico. |
+| Devops | `DEVOPS-001` | `devops/…` | Infraestructura, CI, scripts, documentación o configuración del repositorio. |
 
-El proyecto usa `main` (estable) y `develop` (integracion):
+### IDs de trazabilidad
+
+Cada issue debe llevar un ID de trazabilidad en su título o cuerpo:
+
+- Feature: `FEAT-NNN`
+- Task: `T-NNN`
+- Hotfix: `HOTFIX-NNN`
+- Devops: `DEVOPS-NNN`
+
+Las **acceptance criteria** (criterios de aceptación) también llevan su propio
+ID para trazabilidad, por ejemplo `AC-001`, `AC-002`. Una feature se considera
+completa solo cuando todas sus acceptance criteria (y las de sus tasks) están
+cumplidas y validadas.
+
+### Crear una feature
+
+1. Abre una issue de tipo **Feature** usando la plantilla de GitHub.
+2. Asigna un ID `FEAT-NNN`.
+3. Define los acceptance criteria (`AC-…`).
+4. Si es necesario, desglosa la feature en tasks: abre issues de tipo **Task**
+   con ID `T-NNN`, indicando la feature padre (`FEAT-NNN`) y sus propios
+   acceptance criteria.
+
+### Crear un hotfix
+
+1. Abre una issue de tipo **Hotfix** usando la plantilla de GitHub.
+2. Asigna un ID `HOTFIX-NNN`.
+3. Describe el bug, su impacto y los acceptance criteria para darlo por resuelto.
+
+### Crear un issue de devops
+
+Para cambios de infraestructura, CI, scripts, documentación o configuración del
+repositorio, abre una issue de tipo **Devops** con ID `DEVOPS-NNN`.
+
+## Tipos de rama
+
+| Prefijo | Propósito | Origen | Destino del PR |
+|---|---|---|---|
+| `feature/` | Implementar una feature | `develop` | `develop` |
+| `hotfix/` | Arreglo puntual de un bug | `develop` | `develop` |
+| `devops/` | Infraestructura, CI, documentación, repo | `develop` | `develop` |
+| `release/` | Sincronizar `develop` hacia `main` | `develop` | `main` |
+
+**Nota:** No existe un pipeline de releases. Un PR de tipo `release` solo
+sincroniza `main` con `develop`; tras el merge, crear una etiqueta de versión
+en `main`.
+
+## Crear una rama
+
+Siempre parta desde `develop` actualizado:
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/descripcion-corta
+git checkout -b feature/descripcion-corta      # o hotfix/..., devops/..., release/...
 ```
 
 Cuando termine:
 
-1. Suba la rama: `git push origin feature/descripcion-corta`.
-2. Abra un pull request hacia `develop`.
-3. Asegurese de que la CI pasa.
-4. Revise los cambios y fusione en `develop`.
-5. Elimine la rama de funcionalidad.
+```bash
+git add -A
+git commit -m "tipo: descripción breve (FEAT-001)"
+git push origin feature/descripcion-corta
+```
 
-Lo mismo se aplica para correcciones (`fix/*`) y refactorizaciones
-(`refactor/*`).
+Luego abra el pull request correspondiente (ver sección siguiente).
+
+## Pull requests
+
+Cada PR debe indicar su tipo en la plantilla de pull request:
+
+- **`feature`**: implementa una feature nueva.
+- **`hotfix`**: arreglo puntual de un bug.
+- **`devops`**: infraestructura, CI, scripts, documentación o configuración.
+- **`release`**: sincroniza `develop` hacia `main`.
+
+### PRs de feature / hotfix / devops
+
+1. La rama origen es `feature/…`, `hotfix/…` o `devops/…`.
+2. La rama destino es `develop`.
+3. Indique el ID de trazabilidad del issue que cierra (ej. `Closes #123 — FEAT-001`).
+4. Liste los acceptance criteria cumplidos (`AC-001`, `AC-002`, …).
+5. Tras la revisión y que la CI pase, fusione hacia `develop`.
+6. **Elimine la rama** tras el merge.
+7. **Cierre el issue correspondiente** (feature/task/hotfix) cuando se completen
+   todas sus acceptance criteria.
+
+### PRs de release
+
+1. La rama origen es `release/…`.
+2. La rama destino es `main`.
+3. No hay pipeline de releases: el PR solo sincroniza `main` con `develop`.
+4. Tras el merge en `main`, cree una etiqueta de versión (ej. `v1.0.0`).
 
 ## Compilar el proyecto
 
@@ -85,12 +164,16 @@ make sanitize
 - Nombres claros, funciones pequenas y responsabilidades simples.
 - RAII y propiedad explicita; evite asignacion dinamica innecesaria y punteros
   raw propietarios.
-- Advertencias del compilador activas: `-Wall -Wextra -Wpedantic`.
+- Advertencias del compilador activas: `-Wall -Wextra -Werror -Wpedantic -std=c++98`.
 - Formato coherente (.clang-format).
+- Use los IDs de trazabilidad (`FEAT-…`, `T-…`, `HOTFIX-…`, `DEVOPS-…`,
+  `AC-…`) en los mensajes de commit y en las descripciones de PR.
 
 ## Pull request
 
 - Describa el cambio y por qué es necesario.
+- Indique el tipo de PR (`feature`, `hotfix`, `devops` o `release`).
 - Adicione o actualice pruebas que cubran el nuevo comportamiento.
+- Liste los acceptance criteria cumplidos.
 - Verifique `make build`, `make test` y `make valgrind` localmente.
 - Asegurese de que CI pasa antes de solicitar revision.
