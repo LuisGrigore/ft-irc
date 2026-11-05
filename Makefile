@@ -1,14 +1,14 @@
-# Comandos de desarrollo para el proyecto ft_irc (C++98).
-# Ver AgentGuide.md, seccion 7.
+# Development commands for the ft_irc project (C++98).
+# See AgentGuide.md, section 7.
 #
-#   make build             Configurar y compilar el proyecto
-#   make test              Ejecutar todas las pruebas
-#   make test-unit         Ejecutar pruebas unitarias
-#   make test-integration  Ejecutar pruebas de integracion
-#   make valgrind          Ejecutar pruebas con Valgrind
-#   make sanitize          Compilar y ejecutar pruebas con sanitizadores
-#   make clean             Eliminar directorios de build generados
-#   make help              Mostrar esta ayuda
+#   make build             Configure and compile the project
+#   make test              Run all tests
+#   make test-unit         Run unit tests
+#   make test-integration  Run integration tests
+#   make valgrind          Run tests with Valgrind
+#   make sanitize          Compile and run tests with sanitizers
+#   make clean             Remove generated build directories
+#   make help              Show this help
 
 .PHONY: build test test-unit test-integration valgrind sanitize clean help
 
@@ -51,12 +51,12 @@ clean:
 	rm -rf $(BUILD_DIR) $(SANITIZE_DIR)
 
 help:
-	@echo "Comandos disponibles:"
-	@echo "  make build             Configurar y compilar el proyecto"
-	@echo "  make test              Ejecutar todas las pruebas"
-	@echo "  make test-unit         Ejecutar pruebas unitarias"
-	@echo "  make test-integration  Ejecutar pruebas de integracion"
-	@echo "  make valgrind          Ejecutar pruebas con Valgrind"
-	@echo "  make sanitize          Compilar y ejecutar pruebas con sanitizadores"
-	@echo "  make clean             Eliminar directorios de build generados"
-	@echo "  make help              Mostrar esta ayuda"
+	@echo "Available commands:"
+	@echo "  make build             Configure and compile the project"
+	@echo "  make test              Run all tests"
+	@echo "  make test-unit         Run unit tests"
+	@echo "  make test-integration  Run integration tests"
+	@echo "  make valgrind          Run tests with Valgrind"
+	@echo "  make sanitize          Compile and run tests with sanitizers"
+	@echo "  make clean             Remove generated build directories"
+	@echo "  make help              Show this help"

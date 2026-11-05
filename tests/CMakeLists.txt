@@ -1,4 +1,4 @@
-# Flags comunes para los ejecutables de prueba (proyecto, no de CppUTest).
+# Common flags for test executables (project, not CppUTest).
 set(TEST_WARNING_FLAGS ${PROJECT_WARNING_FLAGS})
 
 set(TEST_COMPILE_SANITIZER_FLAGS)
@@ -9,9 +9,9 @@ if(ENABLE_SANITIZERS AND (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$"))
     set(TEST_LINK_SANITIZER_FLAGS -fsanitize=address,undefined)
 endif()
 
-# Cabeceras de CppUTest (dependencia externa) se marcan como cabeceras del
-# sistema: -Werror no se aplica a sus propias advertencias, solo al codigo del
-# proyecto. El include de produccion del proyecto no es SYSTEM.
+# CppUTest headers (external dependency) are marked as system headers:
+# -Werror does not apply to their own warnings, only to project code.
+# The project's production include is not SYSTEM.
 set(PROJECT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 add_executable(unit_tests unit/test_counter.cpp test_main.cpp)
@@ -30,11 +30,10 @@ if(TEST_LINK_SANITIZER_FLAGS)
     target_link_options(integration_tests PRIVATE ${TEST_LINK_SANITIZER_FLAGS})
 endif()
 
-# Cabeceras de CppUTest (dependencia externa) como cabeceras del sistema:
-# -isystem suprime sus advertencias bajo -Werror, manteniendo -Werror estricto
-# para el codigo del proyecto. set_source_files_properties solo afecta a la
-# compilacion, nunca al enlazador (evitando que -isystem se pase como archivo
-# de entrada al linker).
+# CppUTest headers as system headers:
+# -isystem suppresses their warnings under -Werror, keeping -Werror strict
+# for project code. set_source_files_properties only affects compilation,
+# never linking (avoiding passing -isystem as linker input file).
 set_source_files_properties(
     unit/test_counter.cpp
     integration/test_counter_integration.cpp

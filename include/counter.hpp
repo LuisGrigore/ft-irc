@@ -2,17 +2,17 @@
 #define COUNTER_HPP
 
 /*
- * Ejemplo minimo de modulo de produccion (C++98).
+ * Minimal example of a production module (C++98).
  *
- * Diseno intencionalmente sencillo para validar la infraestructura de
- * construccion y pruebas, no para definir la arquitectura del proyecto.
+ * Intentionally simple design to validate build and test infrastructure,
+ * not to define the project's architecture.
  *
- * Decision no obvia:
- *   - La copia esta deshabilitada (constructora de copia y operador de
- *     asignacion declarados pero no definidos) porque la clase posee memoria
- *     dinamica (value_) y una copia implicita provocaria doble liberacion.
- *   - value_ se reserva en el monticulo y se libera en el destructor para
- *     poder ejercitar reserva/liberacion de memoria dinamica en las pruebas.
+ * Non-obvious decision:
+ *   - Copy is disabled (copy constructor and assignment operator declared but
+ *     not defined) because the class owns dynamic memory (value_) and an
+ *     implicit copy would cause double free.
+ *   - value_ is allocated on the heap and freed in the destructor so that
+ *     allocation/deallocation of dynamic memory can be exercised in tests.
  */
 
 class Counter {
@@ -30,8 +30,8 @@ private:
     int* value_;
 
     /*
-     * C++98 no tiene = delete. Se declara sin definir para prohibir la copia.
-     * No se proporciona implementacion a proposito.
+     * C++98 does not have = delete. It is declared without definition to
+     * prohibit copying. No implementation is provided on purpose.
      */
     Counter(const Counter&);
     Counter& operator=(const Counter&);

@@ -1,0 +1,79 @@
+name: "New Feature"
+description: "Create a high-level feature with its acceptance criteria and associated tasks"
+title: "[FEAT] <feature title>"
+labels: ["feature", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Feature Template
+
+        A **feature** is a top-level unit of work implemented on a `feature/` branch.
+        Each feature has a **traceability ID** (e.g. `FEAT-001`) and a list of
+        **acceptance criteria** (e.g. `AC-001`, `AC-002`).
+        The tasks composing it are sub-issues of this feature.
+
+  - type: input
+    id: feat-id
+    attributes:
+      label: "Feature traceability ID"
+      description: "Example: FEAT-001. Use it to reference this feature in commits, branches and PRs."
+      placeholder: "FEAT-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Feature description"
+      placeholder: "What will be implemented and why?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria"
+      description: |
+        List acceptance criteria, one per line, each with its own traceability ID.
+        Example:
+        - AC-001: The module compiles with C++98 and -Werror.
+        - AC-002: All unit tests pass.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "Associated tasks (sub-issues)"
+      description: |
+        List the tasks that break down this feature. Each task will be a separate
+        issue of type "Task" with this feature as parent.
+        Example:
+        - T-001: Implement Counter class.
+        - T-002: Write unit tests.
+      placeholder: |
+        - T-001: ...
+        - T-002: ...
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: "Estimated complexity"
+      options:
+        - "Low"
+        - "Medium"
+        - "High"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: "Confirmation"
+      options:
+        - label: "I have verified that no issue with the same functionality already exists."
+          required: true
