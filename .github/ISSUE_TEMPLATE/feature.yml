@@ -1,0 +1,77 @@
+name: "Nueva Feature"
+description: "Crea una feature de alto nivel con sus acceptance criteria y tasks asociadas"
+title: "[FEAT] <título de la feature>"
+labels: ["feature", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Plantilla de Feature
+
+        Una **feature** es una unidad de trabajo que se implementa en una rama `feature/`.
+        Cada feature tiene un **ID de trazabilidad** (ej. `FEAT-001`) y una lista de **acceptance criteria** (ej. `AC-001`, `AC-002`).
+        Las tasks que la componen son subissues de esta feature.
+
+  - type: input
+    id: feat-id
+    attributes:
+      label: "ID de trazabilidad (Feature)"
+      description: "Ejemplo: FEAT-001. Úsalo para referenciar esta feature en commits, ramas y PRs."
+      placeholder: "FEAT-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Descripción de la feature"
+      placeholder: "¿Qué se va a implementar y por qué?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria (criterios de aceptación)"
+      description: |
+        Lista los criterios de aceptación, uno por línea, con su propio ID de trazabilidad.
+        Ejemplo:
+        - AC-001: El módulo compila con C++98 y -Werror.
+        - AC-002: Todas las pruebas unitarias pasan.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: "Tasks asociadas (subissues)"
+      description: |
+        Enumera las tasks que desglosan esta feature. Cada task será un issue separado de tipo "Task" con este feature como padre.
+        Ejemplo:
+        - T-001: Implementar clase Counter.
+        - T-002: Escribir pruebas unitarias.
+      placeholder: |
+        - T-001: ...
+        - T-002: ...
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: "Complejidad estimada"
+      options:
+        - "Baja"
+        - "Media"
+        - "Alta"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: "Confirmación"
+      options:
+        - label: "He revisado que no existe ya una issue con la misma funcionalidad."
+          required: true
