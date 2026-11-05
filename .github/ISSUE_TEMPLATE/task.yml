@@ -1,22 +1,23 @@
-name: "Nueva Task (subissue de feature)"
-description: "Crea una task que es subissue de una feature existente"
-title: "[TASK] <título de la task>"
+name: "New Task (sub-issue of feature)"
+description: "Create a task that is a sub-issue of an existing feature"
+title: "[TASK] <task title>"
 labels: ["task", "triage"]
 body:
   - type: markdown
     attributes:
       value: |
-        # Plantilla de Task
+        # Task Template
 
-        Una **task** es una unidad de trabajo menor que pertenece a una **feature padre**.
-        Es un subissue de la feature y debe tener su propio **ID de trazabilidad** (ej. `T-001`) y **acceptance criteria** (ej. `AC-003`).
-        Se implementa en la misma rama `feature/<nombre>` de la feature padre.
+        A **task** is a smaller unit of work belonging to a **parent feature**.
+        It is a sub-issue of the feature and must have its own **traceability ID**
+        (e.g. `T-001`) and **acceptance criteria** (e.g. `AC-003`).
+        It is implemented on the same `feature/<name>` branch as the parent feature.
 
   - type: input
     id: task-id
     attributes:
-      label: "ID de trazabilidad (Task)"
-      description: "Ejemplo: T-001."
+      label: "Task traceability ID"
+      description: "Example: T-001."
       placeholder: "T-001"
     validations:
       required: true
@@ -24,8 +25,8 @@ body:
   - type: input
     id: parent-feature
     attributes:
-      label: "Feature padre (ID)"
-      description: "ID de la feature de la que depende esta task, ej. FEAT-001."
+      label: "Parent feature (ID)"
+      description: "ID of the feature this task depends on, e.g. FEAT-001."
       placeholder: "FEAT-001"
     validations:
       required: true
@@ -33,20 +34,20 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: "Descripción de la task"
-      placeholder: "¿Qué se va a hacer en esta task?"
+      label: "Task description"
+      placeholder: "What will be done in this task?"
     validations:
       required: true
 
   - type: textarea
     id: acceptance-criteria
     attributes:
-      label: "Acceptance criteria (criterios de aceptación)"
+      label: "Acceptance criteria"
       description: |
-        Lista los criterios de aceptación de esta task, uno por línea, con su propio ID de trazabilidad.
-        Ejemplo:
-        - AC-003: La clase Counter se compila sin advertencias.
-        - AC-004: `make test-unit` pasa.
+        List this task's acceptance criteria, one per line, each with its own traceability ID.
+        Example:
+        - AC-003: Counter class compiles without warnings.
+        - AC-004: `make test-unit` passes.
       placeholder: |
         - AC-001: ...
         - AC-002: ...
@@ -56,7 +57,7 @@ body:
   - type: checkboxes
     id: ready
     attributes:
-      label: "Confirmación"
+      label: "Confirmation"
       options:
-        - label: "La feature padre existe y tiene un ID asignado."
+        - label: "The parent feature exists and has an ID assigned."
           required: true
