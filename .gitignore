@@ -1,0 +1,23 @@
+# Directorios de compilacion (nunca se commitean)
+build/
+build-asan/
+cmake-build-*/
+
+# Artefactos de CMake
+CMakeFiles/
+CMakeCache.txt
+Testing/
+compile_commands.json
+
+# Binarios y objetos generados
+*.o
+*.a
+*.so
+*.dylib
+*.out
+
+# Entornos de desarrollo
+.idea/
+.vscode/
+*~
+#*#
