@@ -1,0 +1,62 @@
+name: "Nueva Task (subissue de feature)"
+description: "Crea una task que es subissue de una feature existente"
+title: "[TASK] <título de la task>"
+labels: ["task", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Plantilla de Task
+
+        Una **task** es una unidad de trabajo menor que pertenece a una **feature padre**.
+        Es un subissue de la feature y debe tener su propio **ID de trazabilidad** (ej. `T-001`) y **acceptance criteria** (ej. `AC-003`).
+        Se implementa en la misma rama `feature/<nombre>` de la feature padre.
+
+  - type: input
+    id: task-id
+    attributes:
+      label: "ID de trazabilidad (Task)"
+      description: "Ejemplo: T-001."
+      placeholder: "T-001"
+    validations:
+      required: true
+
+  - type: input
+    id: parent-feature
+    attributes:
+      label: "Feature padre (ID)"
+      description: "ID de la feature de la que depende esta task, ej. FEAT-001."
+      placeholder: "FEAT-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Descripción de la task"
+      placeholder: "¿Qué se va a hacer en esta task?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria (criterios de aceptación)"
+      description: |
+        Lista los criterios de aceptación de esta task, uno por línea, con su propio ID de trazabilidad.
+        Ejemplo:
+        - AC-003: La clase Counter se compila sin advertencias.
+        - AC-004: `make test-unit` pasa.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: "Confirmación"
+      options:
+        - label: "La feature padre existe y tiene un ID asignado."
+          required: true
