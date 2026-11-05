@@ -8,47 +8,47 @@ on:
 
 jobs:
   build-and-tests:
-    name: Build y pruebas
+    name: Build and tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cmake g++ make valgrind
 
-      - name: Configurar CMake
+      - name: Configure CMake
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Compilar el proyecto
+      - name: Compile project
         run: cmake --build build
 
-      - name: Ejecutar pruebas unitarias
+      - name: Run unit tests
         run: ctest --test-dir build -L unit --output-on-failure
 
-      - name: Ejecutar pruebas de integracion
+      - name: Run integration tests
         run: ctest --test-dir build -L integration --output-on-failure
 
   memory-checks:
-    name: Comprobaciones de memoria (Valgrind)
+    name: Memory checks (Valgrind)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cmake g++ make valgrind
 
-      - name: Compilar el proyecto en modo Debug
+      - name: Compile project in Debug mode
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
           cmake --build build
 
-      - name: Ejecutar pruebas con Valgrind
+      - name: Run tests with Valgrind
         run: |
           valgrind \
             --leak-check=full \
@@ -64,22 +64,22 @@ jobs:
             build/tests/integration_tests
 
   sanitizers:
-    name: Sanitizadores (ASan + UBSan)
+    name: Sanitizers (ASan + UBSan)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout del repositorio
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq cmake g++ make
 
-      - name: Configurar con sanitizadores habilitados
+      - name: Configure with sanitizers enabled
         run: cmake -S . -B build-asan -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON
 
-      - name: Compilar el proyecto
+      - name: Compile project
         run: cmake --build build-asan
 
-      - name: Ejecutar todas las pruebas
+      - name: Run all tests
         run: ctest --test-dir build-asan --output-on-failure
