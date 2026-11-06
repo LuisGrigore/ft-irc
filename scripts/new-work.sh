@@ -5,32 +5,30 @@
 # Uso:
 #   ./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
 #
-# Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta
-# automáticamente si cada argumento es un tipo (feature/hotfix/devops/chore/release),
-# un número de issue o un nombre descriptivo. Los argumentos que faltan se piden
-# de forma interactiva.
+# Los argumentos son opcionales. Si se omite alguno, el script lo pregunta de
+# forma interactiva. Lo primero que se pregunta es si el trabajo corresponde a
+# un issue de GitHub:
+#
+#   - Si sí: se pide el número de issue, se obtiene su título de GitHub y se
+#     usa para construir el nombre de la rama y el cuerpo del PR (incluyendo
+#     "Closes #N" y los sub-issues, para que GitHub los cierre al hacer merge).
+#   - Si no: se pide el tipo, el nombre descriptivo y una descripción opcional
+#     de forma totalmente interactiva.
 #
 # Ejemplos:
-#   ./scripts/new-work.sh feature 42 implementar-comando-privmsg
-#   ./scripts/new-work.sh 42 implementar-comando-privmsg
-#   ./scripts/new-work.sh feature 42
-#   ./scripts/new-work.sh 42
-#   ./scripts/new-work.sh implementar-comando-privmsg
-#   ./scripts/new-work.sh hotfix 101 corregir-fuga-memoria
-#   ./scripts/new-work.sh devops 5 actualizar-plan-implementacion
-#   ./scripts/new-work.sh release 200 v1-0-0
+#   ./scripts/new-work.sh                          # todo interactivo
+#   ./scripts/new-work.sh feature 42               # tipo + issue, nombre del issue
+#   ./scripts/new-work.sh devops 5 actualizar-docs # tipo + issue + nombre
+#   ./scripts/new-work.sh 42                       # solo issue (tipo y nombre se piden)
 #
 # Tipos soportados: feature, hotfix, devops, chore, release
 #
 # El flujo:
 #   1. Verifica que estás en develop y está actualizado con origin/develop
-#   2. Crea la rama desde develop con el nombre <tipo>/<issue>-<nombre>
-#   3. Sube la rama a origin
-#   4. Crea un Pull Request hacia develop (o main para release)
-#
-# Si se indica un número de issue, el script consulta la API de GitHub (GraphQL)
-# para obtener los sub-issues (hijos) del issue e incluye "Closes #N" en el cuerpo
-# del PR para que GitHub cierre automáticamente el issue y sus hijos al hacer merge.
+#   2. Pregunta si corresponde a un issue y obtiene/pide los datos necesarios
+#   3. Crea la rama desde develop con el nombre <tipo>/<issue>-<nombre>
+#   4. Sube la rama a origin
+#   5. Crea un Pull Request hacia develop (o main para release)
 #
 # Después del merge, recuerda:
 #   - Eliminar la rama
@@ -116,20 +114,7 @@ check_develop_branch() {
 }
 
 # -----------------------------------------------------------------------------
-# Detectar el tipo de un argumento (tipo / numero / nombre)
-# -----------------------------------------------------------------------------
-detect_arg() {
-    local arg="$1"
-    case "$arg" in
-        feature|hotfix|devops|chore|release) echo "tipo" ;;
-        *[!0-9]*) echo "nombre" ;;
-        "") echo "vacio" ;;
-        *) echo "numero" ;;
-    esac
-}
-
-# -----------------------------------------------------------------------------
-# Pedir tipo de cambio si no se proporciona
+# Pedir tipo de cambio (con menú si no se proporciona)
 # -----------------------------------------------------------------------------
 ask_type() {
     local tipo="$1"
@@ -138,13 +123,13 @@ ask_type() {
         return
     fi
 
-    echo "Tipos de cambio disponibles:"
-    echo "  1) feature  - Implementar una feature nueva"
-    echo "  2) hotfix   - Arreglo puntual de un bug"
-    echo "  3) devops   - Infraestructura, CI, documentación, repo"
-    echo "  4) chore    - Tareas de mantenimiento (formatting, dependencias)"
-    echo "  5) release  - Sincronizar develop hacia main"
-    echo
+    echo "Tipos de cambio disponibles:" >&2
+    echo "  1) feature  - Implementar una feature nueva" >&2
+    echo "  2) hotfix   - Arreglo puntual de un bug" >&2
+    echo "  3) devops   - Infraestructura, CI, documentación, repo" >&2
+    echo "  4) chore    - Tareas de mantenimiento (formatting, dependencias)" >&2
+    echo "  5) release  - Sincronizar develop hacia main" >&2
+    echo >&2
     read -r -p "Selecciona el tipo (1-5 o nombre): " choice
 
     case "$choice" in
@@ -159,7 +144,7 @@ ask_type() {
 }
 
 # -----------------------------------------------------------------------------
-# Pedir número de issue si no se proporciona
+# Pedir número de issue (si no se proporciona)
 # -----------------------------------------------------------------------------
 ask_issue_number() {
     local num="$1"
@@ -167,12 +152,12 @@ ask_issue_number() {
         echo "$num"
         return
     fi
-    read -r -p "Número de issue (o presiona Enter para omitir): " num
+    read -r -p "Número de issue: " num
     echo "$num"
 }
 
 # -----------------------------------------------------------------------------
-# Pedir nombre descriptivo si no se proporciona
+# Pedir nombre descriptivo (si no se proporciona)
 # -----------------------------------------------------------------------------
 ask_name() {
     local name="$1"
@@ -223,18 +208,28 @@ pr_target_branch() {
 }
 
 # -----------------------------------------------------------------------------
+# Obtener título de un issue mediante gh
+# -----------------------------------------------------------------------------
+get_issue_title() {
+    local issue_num="$1"
+    local title=""
+    title=$(gh issue view "$issue_num" --json title --jq '.title' 2>/dev/null) || title=""
+    echo "$title"
+}
+
+# -----------------------------------------------------------------------------
 # Obtener sub-issues (hijos) de un issue mediante GraphQL
 # Devuelve una lista de números de issue, uno por línea.
 # -----------------------------------------------------------------------------
 get_sub_issues() {
     local issue_num="$1"
-    local result=""
 
     if ! command -v jq &>/dev/null; then
         log_warn "jq no está instalado; no se podrán obtener los sub-issues del issue #$issue_num."
         return
     fi
 
+    local result=""
     result=$(gh api graphql \
         -f query='query($owner: String!, $repo: String!, $number: Int!) { repository(owner: $owner, name: $repo) { issue(number: $number) { subIssues(first: 100) { nodes { number title state } } } } }' \
         -f owner="$OWNER" \
@@ -242,7 +237,6 @@ get_sub_issues() {
         -F number="$issue_num" 2>/dev/null) || result=""
 
     if [ -z "$result" ]; then
-        log_warn "No se pudieron obtener los sub-issues del issue #$issue_num (¿existe el issue? ¿tiene sub-issues?)."
         return
     fi
 
@@ -254,8 +248,7 @@ get_sub_issues() {
 # -----------------------------------------------------------------------------
 build_closes_section() {
     local issue_num="$1"
-    local lines=""
-    lines="${lines}Closes #${issue_num}"
+    local lines="Closes #${issue_num}"
     local child
     while IFS= read -r child; do
         [ -n "$child" ] && lines="${lines}
@@ -272,41 +265,55 @@ main() {
     check_develop_branch
 
     # -------------------------------------------------------------------------
-    # Procesar argumentos: detectar tipo, número de issue y nombre (cualquier orden)
+    # Procesar argumentos posicionales (opcionales, cualquier orden)
     # -------------------------------------------------------------------------
     local tipo="" issue_num="" nombre=""
     local arg
     for arg in "$@"; do
-        case "$(detect_arg "$arg")" in
-            tipo)
-                if [ -n "$tipo" ]; then
-                    log_error "Se proporcionaron varios tipos de cambio. Especifica solo uno."
-                    exit 1
-                fi
-                tipo="$arg"
+        case "$arg" in
+            feature|hotfix|devops|chore|release)
+                [ -z "$tipo" ] && tipo="$arg" || log_error "Se proporcionaron varios tipos." && exit 1
                 ;;
-            numero)
-                if [ -n "$issue_num" ]; then
-                    log_error "Se proporcionaron varios números de issue. Especifica solo uno."
-                    exit 1
-                fi
-                issue_num="$arg"
+            [0-9]*)
+                [ -z "$issue_num" ] && issue_num="$arg" || log_error "Se proporcionaron varios números de issue." && exit 1
                 ;;
-            nombre)
-                if [ -n "$nombre" ]; then
-                    log_error "Se proporcionaron varios nombres descriptivos. Especifica solo uno."
-                    exit 1
-                fi
-                nombre="$arg"
+            *)
+                [ -z "$nombre" ] && nombre="$arg" || log_error "Se proporcionaron varios nombres." && exit 1
                 ;;
-            vacio) ;;
         esac
     done
 
-    # Obtener valores faltantes de forma interactiva
-    tipo=$(ask_type "$tipo")
-    issue_num=$(ask_issue_number "$issue_num")
-    nombre=$(ask_name "$nombre")
+    # -------------------------------------------------------------------------
+    # Preguntar si corresponde a un issue de GitHub
+    # -------------------------------------------------------------------------
+    local es_issue=""
+    read -r -p "¿Corresponde este trabajo a un issue de GitHub? [y/N]: " es_issue
+
+    if [ "$es_issue" = "y" ] || [ "$es_issue" = "Y" ]; then
+        # ---- Flujo con issue ----
+        issue_num=$(ask_issue_number "$issue_num")
+
+        local issue_title
+        issue_title=$(get_issue_title "$issue_num")
+        if [ -z "$issue_title" ]; then
+            log_error "No se pudo obtener el issue #$issue_num. Verifica que exista y que tengas acceso."
+            exit 1
+        fi
+        log_ok "Issue #$issue_num: $issue_title"
+
+        # Usar el título del issue como nombre si no se dio otro
+        if [ -z "$nombre" ]; then
+            nombre=$(normalize_name "$issue_title")
+            log_info "Nombre derivado del issue: $nombre"
+        fi
+
+        tipo=$(ask_type "$tipo")
+    else
+        # ---- Flujo sin issue (interactivo completo) ----
+        tipo=$(ask_type "$tipo")
+        nombre=$(ask_name "$nombre")
+        issue_num=""
+    fi
 
     nombre=$(normalize_name "$nombre")
     local branch_name
@@ -337,7 +344,11 @@ main() {
             local commit_msg
             read -r -p "Mensaje de commit: " commit_msg
             if [ -z "$commit_msg" ]; then
-                commit_msg="${tipo}: $nombre"
+                if [ -n "$issue_num" ]; then
+                    commit_msg="${tipo}: $nombre (issue #$issue_num)"
+                else
+                    commit_msg="${tipo}: $nombre"
+                fi
             fi
             git commit -m "$commit_msg"
         else
@@ -355,8 +366,7 @@ main() {
     target=$(pr_target_branch "$tipo")
 
     # Título y cuerpo del PR
-    local pr_title pr_body closes_section
-    local issue_label=""
+    local pr_title pr_body closes_section issue_label=""
     if [ -n "$issue_num" ]; then
         issue_label="${tipo^^}-${issue_num}"
         closes_section=$(build_closes_section "$issue_num")
@@ -366,7 +376,7 @@ main() {
 Rama origen: ${branch_name}
 Rama destino: ${target}
 
-Issue relacionado: ${issue_label}
+Issue relacionado: ${issue_label} — $issue_title
 
 ${closes_section}
 
@@ -382,7 +392,7 @@ Lista de verificación:
 - [ ] make build / make test / make valgrind pasan (si aplica)
 
 Instrucciones para el merge:
-- Fusionar hacia ${target}, eliminar la rama y cerrar el issue ${issue_label} (y sus sub-issues) cuando proceda."
+- Fusionar hacia ${target}, eliminar la rama y cerrar el issue ${issue_label} (y sus sub-issues) cuando procede."
     else
         pr_title="[${tipo}] ${nombre}"
         pr_body="Tipo de PR: ${tipo}
@@ -402,7 +412,7 @@ Lista de verificación:
 - [ ] make build / make test / make valgrind pasan (si aplica)
 
 Instrucciones para el merge:
-- Fusionar hacia ${target}, eliminar la rama y cerrar el issue correspondiente cuando proceda."
+- Fusionar hacia ${target}, eliminar la rama y cerrar el issue correspondiente cuando procede."
     fi
 
     # Crear PR
@@ -433,7 +443,7 @@ Instrucciones para el merge:
     if [ -n "$issue_num" ]; then
         echo "  6. GitHub cerrará automáticamente el issue #$issue_num y sus sub-issues al hacer merge."
     else
-        echo "  6. Cierra el issue correspondiente si aplica."
+        echo "  6. No hay issue asociado; cierra manualmente si corresponde."
     fi
     echo "========================================================================"
 }
