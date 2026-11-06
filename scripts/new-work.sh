@@ -432,6 +432,17 @@ main() {
     log_info "Pushing branch to origin..."
     git push -u origin "$branch_name"
 
+    # Ensure there is at least one commit difference between the branch and develop,
+    # otherwise GitHub will not allow creating a Pull Request.
+    local diff_commits=""
+    diff_commits=$(git log develop.."$branch_name" --oneline 2>/dev/null) || diff_commits=""
+    if [ -z "$diff_commits" ]; then
+        log_warn "No commit difference between '$branch_name' and 'develop'. Creating an empty commit to allow PR creation..."
+        git commit --allow-empty -m "${tipo}: $nombre"
+        git push origin "$branch_name"
+        log_ok "Empty commit pushed."
+    fi
+
     # Determine PR target branch
     local target
     target=$(pr_target_branch "$tipo")
