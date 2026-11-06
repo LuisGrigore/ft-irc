@@ -1,17 +1,28 @@
 # ft_irc
 
-Example project in **C++98** initialized according to the `AgentGuide.md` of this
-repository. The goal is to start from a clean, simple and easy-to-contribute
-base: clear structure, C++98 compilation enforced at build level, unit and
-integration tests, memory leak detection with Valgrind, optional sanitizers,
-static analysis through compiler warnings, and a lightweight CI pipeline with
-GitHub Actions.
+The goal is to build a clean, simple, and easy-to-contribute IRC server: clear structure, C++98 compilation enforced at build level, unit and integration tests, memory leak detection with Valgrind, optional sanitizers, static analysis through compiler warnings, and a lightweight CI pipeline with GitHub Actions.
+
+## Documentation & Planning
+
+- [Implementation Plan](docs/implementation_plan.md) — Traceability plan with features (FEAT-…), tasks (T-…), and acceptance criteria (AC-…), derived from the subject and the class diagrams.
+- [Class Diagrams](docs/diagrams/class/) — Mermaid class diagrams:
+  - [irc_clients.mmd](docs/diagrams/class/irc_clients.mmd) — IRCService, Client, ClientManager, NickManager, ChannelManager
+  - [irc_network_layer_pull.mmd](docs/diagrams/class/irc_network_layer_pull.mmd) — SocketService, TickResult, SocketServer
+  - [irc_commands.mmd](docs/diagrams/class/irc_commands.mmd) — IRCParser, IRCMessage, CommandDispatcher, CommandHandler, CommandFactory, Command, XxxCommand, CommandContext, ReplyFormatter
+  - [irc_channels.mmd](docs/diagrams/class/irc_channels.mmd) — ChannelManager, Channel, ChannelMode strategies
 
 ## Repository structure
 
 ```text
 .
 ├── .github/workflows/ci.yml   # CI pipeline
+├── docs/
+│   ├── implementation_plan.md # Feature/task/AC traceability plan
+│   └── diagrams/class/        # Mermaid class diagrams
+│       ├── irc_clients.mmd
+│       ├── irc_network_layer_pull.mmd
+│       ├── irc_commands.mmd
+│       └── irc_channels.mmd
 ├── include/                   # Public headers
 ├── src/                       # Production code
 ├── tests/
@@ -34,8 +45,7 @@ GitHub Actions.
 - C++ compiler compatible with C++98 (GCC or Clang).
 - GNU Make.
 - Valgrind (for memory checking).
-- CppUTest 3.8: downloaded and compiled automatically as part of the project
-  using CMake `FetchContent` (no need to install it manually).
+- CppUTest 3.8: downloaded and compiled automatically as part of the project using CMake `FetchContent` (no need to install it manually).
 
 ## Build instructions
 
@@ -45,9 +55,7 @@ From the repository root:
 make build
 ```
 
-This configures CMake in the `build/` directory (`CMAKE_BUILD_TYPE=Debug`) and
-compiles the production library and test executables. The C++98 standard is
-enforced with:
+This configures CMake in the `build/` directory (`CMAKE_BUILD_TYPE=Debug`) and compiles the production library and test executables. The C++98 standard is enforced with:
 
 ```cmake
 set(CMAKE_CXX_STANDARD 98)
@@ -82,8 +90,7 @@ Tests return a non-zero exit code if they fail.
 
 ## Valgrind
 
-Valgrind is the main memory checking tool. It runs with full leak checking and
-treats `definite` and `indirect` leaks as errors:
+Valgrind is the main memory checking tool. It runs with full leak checking and treats `definite` and `indirect` leaks as errors:
 
 ```bash
 make valgrind
@@ -102,9 +109,7 @@ valgrind \
 
 ## Sanitizers (optional)
 
-Compiles and runs tests with AddressSanitizer + UndefinedBehaviorSanitizer in
-a separate build directory (`build-asan/`), without enabling them in production
-builds by default:
+Compiles and runs tests with AddressSanitizer + UndefinedBehaviorSanitizer in a separate build directory (`build-asan/`), without enabling them in production builds by default:
 
 ```bash
 make sanitize
@@ -124,8 +129,7 @@ ctest --test-dir build-asan --output-on-failure
 make clean
 ```
 
-Removes the `build/` and `build-asan/` directories with all generated
-artifacts.
+Removes the `build/` and `build-asan/` directories with all generated artifacts.
 
 ## Git workflow
 
@@ -141,11 +145,9 @@ main
         └── devops/infra-description
 ```
 
-1. `main`: always stable. Only receives changes from `develop` through pull
-   requests with green CI.
+1. `main`: always stable. Only receives changes from `develop` through pull requests with green CI.
 2. `develop`: integration branch. Receives completed features.
-3. `feature/*`, `hotfix/*`, `devops/*` branches: one per task, created from
-   `develop`.
+3. `feature/*`, `hotfix/*`, `devops/*` branches: one per task, created from `develop`.
 
 ```bash
 git checkout develop
@@ -156,18 +158,13 @@ git push origin feature/my-feature
 # Create pull request towards develop, review and merge.
 ```
 
-When a version is ready, a pull request from `develop` to `main` is opened,
-merged after CI passes, and a version tag is created.
+When a version is ready, a pull request from `develop` to `main` is opened, merged after CI passes, and a version tag is created.
 
-It is recommended to protect `main` (and `develop`) on GitHub: require pull
-requests, require approved CI checks, block direct pushes and block forced
-pushes. These options are not configured automatically from the repository;
-they require manual configuration on GitHub.
+It is recommended to protect `main` (and `develop`) on GitHub: require pull requests, require approved CI checks, block direct pushes and block forced pushes. These options are not configured automatically from the repository; they require manual configuration on GitHub.
 
 ## Traceability: features, tasks and acceptance criteria
 
-All work is organized into **issues** with **traceability IDs** so they can be
-referenced from commits, branches and pull requests.
+All work is organized into **issues** with **traceability IDs** so they can be referenced from commits, branches and pull requests. The full plan is documented in [docs/implementation_plan.md](docs/implementation_plan.md).
 
 | Issue type | Example ID | Branch | Description |
 |---|---|---|---|
@@ -176,32 +173,39 @@ referenced from commits, branches and pull requests.
 | Hotfix | `HOTFIX-001` | `hotfix/…` | One-off fix for a critical bug. |
 | Devops | `DEVOPS-001` | `devops/…` | Infrastructure, CI, scripts, documentation or repository configuration. |
 
-Acceptance criteria also have their own traceability ID, e.g. `AC-001`, `AC-002`.
-A feature is considered complete only when all its acceptance criteria (and
-those of its tasks) are fulfilled and validated.
+Acceptance criteria also have their own traceability ID, e.g. `AC-001`, `AC-002`. A feature is considered complete only when all its acceptance criteria (and those of its tasks) are fulfilled and validated.
 
 ## License
 
-CppUTest (test dependency) is downloaded under its own license (BSD-like, see
-CppUTest repository). The rest of the project is an example without an assigned
-license.
+CppUTest (test dependency) is downloaded under its own license (BSD-like, see CppUTest repository). 
 
 ---
 
 # ft_irc
 
-Proyecto de ejemplo en **C++98** inicializado según el `AgentGuide.md` de este
-repositorio. El objetivo es partir de una base limpia, sencilla y fácil de
-contribuir: estructura clara, compilación en C++98 aplicada a nivel de build,
-pruebas unitarias y de integración, detección de fugas de memoria con Valgrind,
-sanitizadores opcionales, análisis estático mediante advertencias del compilador
-y un pipeline ligero de integración continua con GitHub Actions.
+El objetivo es construir un servidor IRC limpio, sencillo y fácil de contribuir: estructura clara, compilación en C++98 aplicada a nivel de build, pruebas unitarias y de integración, detección de fugas de memoria con Valgrind, sanitizadores opcionales, análisis estático mediante advertencias del compilador y un pipeline ligero de integración continua con GitHub Actions.
+
+## Documentación y planificación
+
+- [Plan de implementación](docs/implementation_plan.md) — Plan de trazabilidad con features (FEAT-…), tasks (T-…) y acceptance criteria (AC-…), derivado del subject y los diagramas de clase.
+- [Diagramas de clase](docs/diagrams/class/) — Diagramas de clase en Mermaid:
+  - [irc_clients.mmd](docs/diagrams/class/irc_clients.mmd) — IRCService, Client, ClientManager, NickManager, ChannelManager
+  - [irc_network_layer_pull.mmd](docs/diagrams/class/irc_network_layer_pull.mmd) — SocketService, TickResult, SocketServer
+  - [irc_commands.mmd](docs/diagrams/class/irc_commands.mmd) — IRCParser, IRCMessage, CommandDispatcher, CommandHandler, CommandFactory, Command, XxxCommand, CommandContext, ReplyFormatter
+  - [irc_channels.mmd](docs/diagrams/class/irc_channels.mmd) — ChannelManager, Channel, estrategias ChannelMode
 
 ## Estructura del repositorio
 
 ```text
 .
 ├── .github/workflows/ci.yml   # Pipeline de integración continua
+├── docs/
+│   ├── implementation_plan.md # Plan de trazabilidad de features/tasks/AC
+│   └── diagrams/class/        # Diagramas de clase en Mermaid
+│       ├── irc_clients.mmd
+│       ├── irc_network_layer_pull.mmd
+│       ├── irc_commands.mmd
+│       └── irc_channels.mmd
 ├── include/                   # Cabeceras públicas
 ├── src/                       # Código de producción
 ├── tests/
@@ -224,8 +228,7 @@ y un pipeline ligero de integración continua con GitHub Actions.
 - Compilador C++ compatible con C++98 (GCC o Clang).
 - GNU Make.
 - Valgrind (para comprobación de memoria).
-- CppUTest 3.8: se descarga y compila automáticamente como parte del proyecto
-  mediante CMake `FetchContent` (no hay que instalarlo a mano).
+- CppUTest 3.8: se descarga y compila automáticamente como parte del proyecto mediante CMake `FetchContent` (no hay que instalarlo a mano).
 
 ## Instrucciones de compilación
 
@@ -235,9 +238,7 @@ Desde la raíz del repositorio:
 make build
 ```
 
-Esto configura CMake en el directorio `build/` (`CMAKE_BUILD_TYPE=Debug`) y
-compila la biblioteca de producción y los ejecutables de prueba. El estándar
-C++98 se fuerza con:
+Esto configura CMake en el directorio `build/` (`CMAKE_BUILD_TYPE=Debug`) y compila la biblioteca de producción y los ejecutables de prueba. El estándar C++98 se fuerza con:
 
 ```cmake
 set(CMAKE_CXX_STANDARD 98)
@@ -272,9 +273,7 @@ Las pruebas devuelven un código de salida distinto de cero si fallan.
 
 ## Valgrind
 
-Valgrind es la herramienta principal de comprobación de memoria. Se ejecuta
-con comprobación completa de fugas y trata las fugas `definite` e `indirect`
-como errores:
+Valgrind es la herramienta principal de comprobación de memoria. Se ejecuta con comprobación completa de fugas y trata las fugas `definite` e `indirect` como errores:
 
 ```bash
 make valgrind
@@ -293,9 +292,7 @@ valgrind \
 
 ## Sanitizadores (opcional)
 
-Compila y ejecuta las pruebas con AddressSanitizer + UndefinedBehaviorSanitizer
-en un directorio de build separado (`build-asan/`), sin activarlos en las
-compilaciones de producción por defecto:
+Compila y ejecuta las pruebas con AddressSanitizer + UndefinedBehaviorSanitizer en un directorio de build separado (`build-asan/`), sin activarlos en las compilaciones de producción por defecto:
 
 ```bash
 make sanitize
@@ -315,8 +312,7 @@ ctest --test-dir build-asan --output-on-failure
 make clean
 ```
 
-Elimina los directorios `build/` y `build-asan/` con todos los artefactos
-generados.
+Elimina los directorios `build/` y `build-asan/` con todos los artefactos generados.
 
 ## Flujo de trabajo con Git
 
@@ -332,11 +328,9 @@ main
         └── devops/infra-description
 ```
 
-1. `main`: siempre estable. Solo recibe cambios de `develop` mediante pull
-   request con CI verde.
+1. `main`: siempre estable. Solo recibe cambios de `develop` mediante pull request con CI verde.
 2. `develop`: rama de integración. Recibe las funcionalidades terminadas.
-3. Ramas `feature/*`, `hotfix/*`, `devops/*`: una por tarea, creadas desde
-   `develop`.
+3. Ramas `feature/*`, `hotfix/*`, `devops/*`: una por tarea, creadas desde `develop`.
 
 ```bash
 git checkout develop
@@ -347,18 +341,13 @@ git push origin feature/mi-feature
 # Crear pull request hacia develop, revisar y fusionar.
 ```
 
-Cuando una versión esté lista, se abre un pull request de `develop` a `main`,
-se fusiona tras pasar la CI y se crea una etiqueta de versión.
+Cuando una versión esté lista, se abre un pull request de `develop` a `main`, se fusiona tras pasar la CI y se crea una etiqueta de versión.
 
-Se recomienda proteger `main` (y `develop`) en GitHub: exigir pull requests,
-exigir comprobaciones de CI aprobadas, bloquear pushes directos y bloquear
-pushes forzados. Estas opciones no se configuran automáticamente desde el
-repositorio; requieren configuración manual en GitHub.
+Se recomienda proteger `main` (y `develop`) en GitHub: exigir pull requests, exigir comprobaciones de CI aprobadas, bloquear pushes directos y bloquear pushes forzados. Estas opciones no se configuran automáticamente desde el repositorio; requieren configuración manual en GitHub.
 
 ## Trazabilidad: features, tasks y acceptance criteria
 
-Todo el trabajo se organiza en **issues** con **IDs de trazabilidad** para
-poder referenciarlos desde commits, ramas y pull requests.
+Todo el trabajo se organiza en **issues** con **IDs de trazabilidad** para poder referenciarlos desde commits, ramas y pull requests. El plan completo está documentado en [docs/implementation_plan.md](docs/implementation_plan.md).
 
 | Tipo de issue | ID de ejemplo | Rama asociada | Descripción |
 |---|---|---|---|
@@ -367,12 +356,8 @@ poder referenciarlos desde commits, ramas y pull requests.
 | Hotfix | `HOTFIX-001` | `hotfix/…` | Arreglo puntual de un bug crítico. |
 | Devops | `DEVOPS-001` | `devops/…` | Infraestructura, CI, scripts, documentación o configuración del repositorio. |
 
-Los acceptance criteria también llevan su propio ID de trazabilidad, por
-ejemplo `AC-001`, `AC-002`. Una feature se considera completa solo cuando todos
-sus acceptance criteria (y los de sus tasks) están cumplidos y validados.
+Los acceptance criteria también llevan su propio ID de trazabilidad, por ejemplo `AC-001`, `AC-002`. Una feature se considera completa solo cuando todos sus acceptance criteria (y los de sus tasks) están cumplidos y validados.
 
 ## Licencia
 
-CppUTest (dependencia de pruebas) se descarga bajo su propia licencia (BSD-like,
-ver repositorio de CppUTest). El resto del proyecto es de ejemplo sin licencia
-asignada.
+CppUTest (dependencia de pruebas) se descarga bajo su propia licencia (BSD-like, ver repositorio de CppUTest).

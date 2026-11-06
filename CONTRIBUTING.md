@@ -1,21 +1,12 @@
 # Contributing Guide
 
-Practical guide for joining the project. The project is written in
-**C++98** and uses CMake, CTest, CppUTest, Valgrind and GitHub Actions (according
-to `AgentGuide.md`).
+Practical guide for joining the project. The project is written in **C++98** and uses CMake, CTest, CppUTest, Valgrind and GitHub Actions (according to `AgentGuide.md`).
 
-## Getting started
-
-1. Clone the repository.
-2. Run `make build` to configure and compile.
-3. Run `make test` to run all tests.
-
-A clean clone should be enough to build and test the project.
+The implementation work is organized according to the [Implementation Plan](docs/implementation_plan.md), which defines features (FEAT-…), tasks (T-…), and acceptance criteria (AC-…) with traceability IDs.
 
 ## Work organization: Features, Tasks and acceptance criteria
 
-All work is organized into **issues** with **traceability IDs** so they can be
-referenced from commits, branches and pull requests.
+All work is organized into **issues** with **traceability IDs** so they can be referenced from commits, branches and pull requests. The full traceability plan is documented in [docs/implementation_plan.md](docs/implementation_plan.md).
 
 ### Issue types
 
@@ -35,18 +26,14 @@ Each issue should have a traceability ID in its title or body:
 - Hotfix: `HOTFIX-NNN`
 - Devops: `DEVOPS-NNN`
 
-**Acceptance criteria** also carry their own traceability ID, e.g. `AC-001`,
-`AC-002`. A feature is considered complete only when all its acceptance criteria
-(and those of its tasks) are fulfilled and validated.
+**Acceptance criteria** also carry their own traceability ID, e.g. `AC-001`, `AC-002`. A feature is considered complete only when all its acceptance criteria (and those of its tasks) are fulfilled and validated.
 
 ### Create a feature
 
 1. Open a **Feature** issue using the GitHub template.
-2. Assign an ID `FEAT-NNN`.
+2. Assign an ID `FEAT-NNN` (see available feature IDs in [docs/implementation_plan.md](docs/implementation_plan.md)).
 3. Define the acceptance criteria (`AC-…`).
-4. If needed, break down the feature into tasks: open **Task** issues with ID
-   `T-NNN`, indicating the parent feature (`FEAT-NNN`) and their own acceptance
-   criteria.
+4. If needed, break down the feature into tasks: open **Task** issues with ID `T-NNN`, indicating the parent feature (`FEAT-NNN`) and their own acceptance criteria.
 
 ### Create a hotfix
 
@@ -56,8 +43,7 @@ Each issue should have a traceability ID in its title or body:
 
 ### Create a devops issue
 
-For infrastructure, CI, scripts, documentation or repository configuration
-changes, open a **Devops** issue with ID `DEVOPS-NNN`.
+For infrastructure, CI, scripts, documentation or repository configuration changes, open a **Devops** issue with ID `DEVOPS-NNN`.
 
 ## Branch types
 
@@ -68,8 +54,7 @@ changes, open a **Devops** issue with ID `DEVOPS-NNN`.
 | `devops/` | Infrastructure, CI, documentation, repository | `develop` | `develop` |
 | `release/` | Synchronize `develop` into `main` | `develop` | `main` |
 
-**Note:** There is no release pipeline. A `release` PR only synchronizes
-`main` with `develop`; after the merge, create a version tag on `main`.
+**Note:** There is no release pipeline. A `release` PR only synchronizes `main` with `develop`; after the merge, create a version tag on `main`.
 
 ## Create a branch
 
@@ -108,8 +93,7 @@ Each PR must indicate its type in the pull request template:
 4. List fulfilled acceptance criteria (`AC-001`, `AC-002`, …).
 5. After review and CI passing, merge into `develop`.
 6. **Delete the branch** after merge.
-7. **Close the corresponding issue** (feature/task/hotfix) when all its
-   acceptance criteria are completed.
+7. **Close the corresponding issue** (feature/task/hotfix) when all its acceptance criteria are completed.
 
 ### PRs of type release
 
@@ -129,24 +113,19 @@ The default build is in `build/` in `Debug` mode.
 ## Add unit tests
 
 1. Create a file in `tests/unit/` (e.g. `tests/unit/test_foo.cpp`).
-2. Use CppUTest (`#include "CppUTest/TestHarness.h"`, macros `TEST_GROUP` and
-   `TEST`).
+2. Use CppUTest (`#include "CppUTest/TestHarness.h"`, macros `TEST_GROUP` and `TEST`).
 3. Add the file to the `unit_tests` executable in `tests/CMakeLists.txt`.
 4. Run `make test-unit` or `ctest --test-dir build -L unit --output-on-failure`.
 
-Requirements: no external dependencies, deterministic, no filesystem or network
-operations unless essential, one behavior per test.
+Requirements: no external dependencies, deterministic, no filesystem or network operations unless essential, one behavior per test.
 
 ## Add integration tests
 
 1. Create a file in `tests/integration/`.
-2. Register the executable in `tests/CMakeLists.txt` and add a test with
-   `add_test(...)` and the `integration` label.
-3. Run `make test-integration` or
-   `ctest --test-dir build -L integration --output-on-failure`.
+2. Register the executable in `tests/CMakeLists.txt` and add a test with `add_test(...)` and the `integration` label.
+3. Run `make test-integration` or `ctest --test-dir build -L integration --output-on-failure`.
 
-Requirements: independent, cleans up temporary resources, does not depend on
-execution order, does not modify production data.
+Requirements: independent, cleans up temporary resources, does not depend on execution order, does not modify production data.
 
 ## Run all checks
 
@@ -164,15 +143,12 @@ make sanitize
 
 ## Basic code conventions
 
-- Strict C++98: do not use `unique_ptr`, `shared_ptr`, lambdas, `auto`,
-  `nullptr` or C++11 or later features.
+- Strict C++98: do not use `unique_ptr`, `shared_ptr`, lambdas, `auto`, `nullptr` or C++11 or later features.
 - Clear names, small functions and simple responsibilities.
-- RAII and explicit ownership; avoid unnecessary dynamic allocation and raw
-  owning pointers.
+- RAII and explicit ownership; avoid unnecessary dynamic allocation and raw owning pointers.
 - Compiler warnings active: `-Wall -Wextra -Werror -Wpedantic -std=c++98`.
 - Consistent formatting (.clang-format).
-- Use traceability IDs (`FEAT-…`, `T-…`, `HOTFIX-…`, `DEVOPS-…`, `AC-…`)
-  in commit messages and PR descriptions.
+- Use traceability IDs (`FEAT-…`, `T-…`, `HOTFIX-…`, `DEVOPS-…`, `AC-…`) in commit messages and PR descriptions.
 
 ## Pull request
 
@@ -187,22 +163,13 @@ make sanitize
 
 # Guía de contribución
 
-Documento práctico para incorporarse al proyecto. El proyecto está escrito en
-**C++98** y usa CMake, CTest, CppUTest, Valgrind y GitHub Actions (según el
-`AgentGuide.md`).
+Documento práctico para incorporarse al proyecto. El proyecto está escrito en **C++98** y usa CMake, CTest, CppUTest, Valgrind y GitHub Actions (según el `AgentGuide.md`).
 
-## Empezar
-
-1. Clonar el repositorio.
-2. Ejecutar `make build` para configurar y compilar.
-3. Ejecutar `make test` para correr todas las pruebas.
-
-Un clon limpio debe ser suficiente para construir y probar el proyecto.
+El trabajo de implementación se organiza según el [Plan de implementación](docs/implementation_plan.md), que define features (FEAT-…), tasks (T-…) y acceptance criteria (AC-…) con IDs de trazabilidad.
 
 ## Organización del trabajo: Features, Tasks y acceptance criteria
 
-Todo el trabajo se organiza en **issues** con **IDs de trazabilidad** para
-poder referenciarlos desde commits, ramas y pull requests.
+Todo el trabajo se organiza en **issues** con **IDs de trazabilidad** para poder referenciarlos desde commits, ramas y pull requests. El plan completo de trazabilidad está documentado en [docs/implementation_plan.md](docs/implementation_plan.md).
 
 ### Tipos de issue
 
@@ -222,18 +189,14 @@ Cada issue debe llevar un ID de trazabilidad en su título o cuerpo:
 - Hotfix: `HOTFIX-NNN`
 - Devops: `DEVOPS-NNN`
 
-Los **acceptance criteria** también llevan su propio ID de trazabilidad, por
-ejemplo `AC-001`, `AC-002`. Una feature se considera completa solo cuando todos
-sus acceptance criteria (y los de sus tasks) están cumplidos y validados.
+Los **acceptance criteria** también llevan su propio ID de trazabilidad, por ejemplo `AC-001`, `AC-002`. Una feature se considera completa solo cuando todos sus acceptance criteria (y los de sus tasks) están cumplidos y validados.
 
 ### Crear una feature
 
 1. Abrir una issue de tipo **Feature** usando la plantilla de GitHub.
-2. Asignar un ID `FEAT-NNN`.
+2. Asignar un ID `FEAT-NNN` (ver los IDs de feature disponibles en [docs/implementation_plan.md](docs/implementation_plan.md)).
 3. Definir los acceptance criteria (`AC-…`).
-4. Si es necesario, desglosar la feature en tasks: abrir issues de tipo **Task**
-   con ID `T-NNN`, indicando la feature padre (`FEAT-NNN`) y sus propios
-   acceptance criteria.
+4. Si es necesario, desglosar la feature en tasks: abrir issues de tipo **Task** con ID `T-NNN`, indicando la feature padre (`FEAT-NNN`) y sus propios acceptance criteria.
 
 ### Crear un hotfix
 
@@ -243,8 +206,7 @@ sus acceptance criteria (y los de sus tasks) están cumplidos y validados.
 
 ### Crear un issue de devops
 
-Para cambios de infraestructura, CI, scripts, documentación o configuración del
-repositorio, abrir una issue de tipo **Devops** con ID `DEVOPS-NNN`.
+Para cambios de infraestructura, CI, scripts, documentación o configuración del repositorio, abrir una issue de tipo **Devops** con ID `DEVOPS-NNN`.
 
 ## Tipos de rama
 
@@ -255,9 +217,7 @@ repositorio, abrir una issue de tipo **Devops** con ID `DEVOPS-NNN`.
 | `devops/` | Infraestructura, CI, documentación, repo | `develop` | `develop` |
 | `release/` | Sincronizar `develop` hacia `main` | `develop` | `main` |
 
-**Nota:** No existe un pipeline de releases. Un PR de tipo `release` solo
-sincroniza `main` con `develop`; tras el merge, crear una etiqueta de versión
-en `main`.
+**Nota:** No existe un pipeline de releases. Un PR de tipo `release` solo sincroniza `main` con `develop`; tras el merge, crear una etiqueta de versión en `main`.
 
 ## Crear una rama
 
@@ -296,8 +256,7 @@ Cada PR debe indicar su tipo en la plantilla de pull request:
 4. Listar los acceptance criteria cumplidos (`AC-001`, `AC-002`, …).
 5. Tras la revisión y que la CI pase, fusionar hacia `develop`.
 6. **Eliminar la rama** tras el merge.
-7. **Cerrar el issue correspondiente** (feature/task/hotfix) cuando se completen
-   todos sus acceptance criteria.
+7. **Cerrar el issue correspondiente** (feature/task/hotfix) cuando se completen todos sus acceptance criteria.
 
 ### PRs de release
 
@@ -317,25 +276,19 @@ El build por defecto está en `build/` en modo `Debug`.
 ## Añadir pruebas unitarias
 
 1. Crear un archivo en `tests/unit/` (por ejemplo, `tests/unit/test_foo.cpp`).
-2. Usar CppUTest (`#include "CppUTest/TestHarness.h"`, macros `TEST_GROUP` y
-   `TEST`).
+2. Usar CppUTest (`#include "CppUTest/TestHarness.h"`, macros `TEST_GROUP` y `TEST`).
 3. Agregar el archivo al ejecutable `unit_tests` en `tests/CMakeLists.txt`.
 4. Ejecutar `make test-unit` o `ctest --test-dir build -L unit --output-on-failure`.
 
-Requisitos: sin dependencias externas, determinista, sin operaciones de
-sistema de archivos ni red a menos que sea esencial, un comportamiento por
-prueba.
+Requisitos: sin dependencias externas, determinista, sin operaciones de sistema de archivos ni red a menos que sea esencial, un comportamiento por prueba.
 
 ## Añadir pruebas de integración
 
 1. Crear un archivo en `tests/integration/`.
-2. Registrar el ejecutable en `tests/CMakeLists.txt` y añadir una prueba con
-   `add_test(...)` y la etiqueta `integration`.
-3. Ejecutar `make test-integration` o
-   `ctest --test-dir build -L integration --output-on-failure`.
+2. Registrar el ejecutable en `tests/CMakeLists.txt` y añadir una prueba con `add_test(...)` y la etiqueta `integration`.
+3. Ejecutar `make test-integration` o `ctest --test-dir build -L integration --output-on-failure`.
 
-Requisitos: independiente, limpia recursos temporales, sin depender del orden
-de ejecución, sin modificar datos de producción.
+Requisitos: independiente, limpia recursos temporales, sin depender del orden de ejecución, sin modificar datos de producción.
 
 ## Ejecutar todas las comprobaciones
 
@@ -353,15 +306,12 @@ make sanitize
 
 ## Convenciones de código básicas
 
-- C++98 estricto: no usar `unique_ptr`, `shared_ptr`, lambdas, `auto`,
-  `nullptr` ni características de C++11 o posteriores.
+- C++98 estricto: no usar `unique_ptr`, `shared_ptr`, lambdas, `auto`, `nullptr` ni características de C++11 o posteriores.
 - Nombres claros, funciones pequeñas y responsabilidades simples.
-- RAII y propiedad explícita; evitar asignación dinámica innecesaria y punteros
-  raw propietarios.
+- RAII y propiedad explícita; evitar asignación dinámica innecesaria y punteros raw propietarios.
 - Advertencias del compilador activas: `-Wall -Wextra -Werror -Wpedantic -std=c++98`.
 - Formato coherente (.clang-format).
-- Usar los IDs de trazabilidad (`FEAT-…`, `T-…`, `HOTFIX-…`, `DEVOPS-…`,
-  `AC-…`) en los mensajes de commit y en las descripciones de PR.
+- Usar los IDs de trazabilidad (`FEAT-…`, `T-…`, `HOTFIX-…`, `DEVOPS-…`, `AC-…`) en los mensajes de commit y en las descripciones de PR.
 
 ## Pull request
 

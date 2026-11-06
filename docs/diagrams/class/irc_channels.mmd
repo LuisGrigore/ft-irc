@@ -1,0 +1,107 @@
+classDiagram
+    class IRCService {
+        <<orchestrator>>
+        - ChannelManager* channelManager
+        + void onClientDisconnected(int fd)
+    }
+
+    class ChannelManager {
+        <<registry>>
+        - std::map~std::string, Channel*~ channels
+        + Channel* findChannel(const std::string& name)
+        + Channel* createChannel(const std::string& name, Client* creator)
+        + bool destroyChannel(const std::string& name)
+        + bool isValidChannelName(const std::string& name) const
+        + std::vector~Channel*~ channelsOf(Client* client) const
+        + void removeClientFromAll(Client* client)
+        + std::vector~Channel*~ listChannels() const
+    }
+
+    class Channel {
+        <<entity>>
+        - std::string name
+        - std::string topic
+        - Client* creator
+        - std::set~Client*~ members
+        - std::set~Client*~ operators
+        - std::set~Client*~ invited
+        - std::vector~ChannelMode*~ modeStrategies
+        + Channel(const std::string& name, Client* creator)
+        + ~Channel()
+        + const std::string& getName() const
+        + const std::string& getTopic() const
+        + void setTopic(const std::string& topic, Client* setter)
+        + Client* getCreator() const
+        + bool addMember(Client* client)
+        + bool removeMember(Client* client)
+        + bool isMember(Client* client) const
+        + bool isOperator(Client* client) const
+        + void addOperator(Client* client)
+        + void removeOperator(Client* client)
+        + void addInvited(Client* client)
+        + bool isInvited(Client* client) const
+        + int memberCount() const
+        + ChannelMode* findMode(const std::string& modeChar) const
+        + bool checkAll(Client* client, const std::string& context) const
+        + std::vector~Client*~ recipients(Client* exclude) const
+    }
+
+    class ChannelMode {
+        <<interface>>
+        + ~ChannelMode()
+        + modeChar() const* std::string
+        + apply(Channel* channel, Client* issuer, const std::vector~std::string~& args)* bool
+        + check(Channel* channel, Client* client, const std::string& context) const* bool
+    }
+
+    class InviteOnlyMode {
+        <<strategy>>
+        - bool enabled
+        + modeChar() std::string
+        + apply(...) bool
+        + check(...) bool
+    }
+
+    class TopicRestrictedMode {
+        <<strategy>>
+        - bool enabled
+        + modeChar() std::string
+        + apply(...) bool
+        + check(...) bool
+    }
+
+    class KeyMode {
+        <<strategy>>
+        - std::string key
+        + modeChar() std::string
+        + apply(...) bool
+        + check(...) bool
+    }
+
+    class OperatorMode {
+        <<strategy>>
+        + modeChar() std::string
+        + apply(...) bool
+        + check(...) bool
+    }
+
+    class LimitMode {
+        <<strategy>>
+        - int limit
+        + modeChar() std::string
+        + apply(...) bool
+        + check(...) bool
+    }
+
+    class Client
+
+    IRCService *-- ChannelManager : owns
+    ChannelManager --> Channel : map of channels
+    Channel --> Client : members / operators / invited / creator
+    Channel *-- ChannelMode : owns strategies
+
+    ChannelMode <|.. InviteOnlyMode
+    ChannelMode <|.. TopicRestrictedMode
+    ChannelMode <|.. KeyMode
+    ChannelMode <|.. OperatorMode
+    ChannelMode <|.. LimitMode
