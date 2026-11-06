@@ -1,21 +1,22 @@
-name: "Hotfix / Bug crítico"
-description: "Reporta un bug que requiere un arreglo puntual (rama hotfix/)"
-title: "[HOTFIX] <título del hotfix>"
-labels: ["hotfix", "bug", "urgente"]
+name: "Hotfix / Critical Bug"
+description: "Report a bug requiring a hotfix (hotfix/ branch)"
+title: "[HOTFIX] <hotfix title>"
+labels: ["hotfix", "bug", "urgent"]
 body:
   - type: markdown
     attributes:
       value: |
-        # Plantilla de Hotfix
+        # Hotfix Template
 
-        Un **hotfix** es un arreglo puntual que se implementa en una rama `hotfix/`.
-        Tiene un **ID de trazabilidad** (ej. `HOTFIX-001`) y **acceptance criteria** para validar que el bug queda resuelto.
+        A **hotfix** is a one-off fix implemented on a `hotfix/` branch.
+        It has a **traceability ID** (e.g. `HOTFIX-001`) and **acceptance criteria**
+        to validate the bug is resolved.
 
   - type: input
     id: hotfix-id
     attributes:
-      label: "ID de trazabilidad (Hotfix)"
-      description: "Ejemplo: HOTFIX-001."
+      label: "Hotfix traceability ID"
+      description: "Example: HOTFIX-001."
       placeholder: "HOTFIX-001"
     validations:
       required: true
@@ -23,28 +24,28 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: "Descripción del bug"
-      placeholder: "¿Qué falla, en qué versión y cómo se reproduce?"
+      label: "Bug description"
+      placeholder: "What fails, in which version, and how to reproduce it?"
     validations:
       required: true
 
   - type: textarea
     id: impact
     attributes:
-      label: "Impacto y urgencia"
-      placeholder: "¿Qué usuarios o funcionalidades se ven afectados?"
+      label: "Impact and urgency"
+      placeholder: "Which users or functionality are affected?"
     validations:
       required: true
 
   - type: textarea
     id: acceptance-criteria
     attributes:
-      label: "Acceptance criteria (criterios de aceptación)"
+      label: "Acceptance criteria"
       description: |
-        Criterios que deben cumplirse para considerar el hotfix resuelto.
-        Ejemplo:
-        - AC-010: El flujo afectado vuelve a funcionar.
-        - AC-011: No hay regresiones en `make test`.
+        Criteria that must be met to consider the hotfix resolved.
+        Example:
+        - AC-010: The affected flow works again.
+        - AC-011: No regressions in `make test`.
       placeholder: |
         - AC-001: ...
         - AC-002: ...
@@ -54,11 +55,11 @@ body:
   - type: dropdown
     id: severity
     attributes:
-      label: "Severidad"
+      label: "Severity"
       options:
-        - "Crítica"
-        - "Alta"
-        - "Media"
-        - "Baja"
+        - "Critical"
+        - "High"
+        - "Medium"
+        - "Low"
     validations:
       required: true
