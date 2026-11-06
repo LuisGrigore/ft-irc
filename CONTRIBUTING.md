@@ -76,6 +76,31 @@ git push origin feature/short-description
 
 Then open the corresponding pull request (see next section).
 
+## Usar el script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+
+Ejemplos:
+
+```bash
+# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
+./scripts/new-work.sh feature 42 implementar-comando-privmsg
+
+# Solo número de issue: crea devops/5 y su PR
+./scripts/new-work.sh 5
+
+# Solo nombre: crea feature/mi-feature y su PR
+./scripts/new-work.sh mi-feature
+```
+
+Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
+
 ## Pull requests
 
 Each PR must indicate its type in the pull request template:
@@ -238,6 +263,31 @@ git push origin feature/descripcion-corta
 ```
 
 Luego abrir el pull request correspondiente (ver siguiente sección).
+
+## Usar el script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+
+Ejemplos:
+
+```bash
+# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
+./scripts/new-work.sh feature 42 implementar-comando-privmsg
+
+# Solo número de issue: crea devops/5 y su PR
+./scripts/new-work.sh 5
+
+# Solo nombre: crea feature/mi-feature y su PR
+./scripts/new-work.sh mi-feature
+```
+
+Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
 
 ## Pull requests
 

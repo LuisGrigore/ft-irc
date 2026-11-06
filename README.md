@@ -162,6 +162,33 @@ When a version is ready, a pull request from `develop` to `main` is opened, merg
 
 It is recommended to protect `main` (and `develop`) on GitHub: require pull requests, require approved CI checks, block direct pushes and block forced pushes. These options are not configured automatically from the repository; they require manual configuration on GitHub.
 
+## Uso del script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+
+Ejemplos:
+
+```bash
+# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
+./scripts/new-work.sh feature 42 implementar-comando-privmsg
+
+# Solo número de issue: crea devops/5 y su PR
+./scripts/new-work.sh 5
+
+# Solo nombre: crea feature/mi-feature y su PR
+./scripts/new-work.sh mi-feature
+```
+
+Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
+
+Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Traceability: features, tasks and acceptance criteria
 
 All work is organized into **issues** with **traceability IDs** so they can be referenced from commits, branches and pull requests. The full plan is documented in [docs/implementation_plan.md](docs/implementation_plan.md).
@@ -344,6 +371,33 @@ git push origin feature/mi-feature
 Cuando una versión esté lista, se abre un pull request de `develop` a `main`, se fusiona tras pasar la CI y se crea una etiqueta de versión.
 
 Se recomienda proteger `main` (y `develop`) en GitHub: exigir pull requests, exigir comprobaciones de CI aprobadas, bloquear pushes directos y bloquear pushes forzados. Estas opciones no se configuran automáticamente desde el repositorio; requieren configuración manual en GitHub.
+
+## Uso del script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+
+Ejemplos:
+
+```bash
+# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
+./scripts/new-work.sh feature 42 implementar-comando-privmsg
+
+# Solo número de issue: crea devops/5 y su PR
+./scripts/new-work.sh 5
+
+# Solo nombre: crea feature/mi-feature y su PR
+./scripts/new-work.sh mi-feature
+```
+
+Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
+
+Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Trazabilidad: features, tasks y acceptance criteria
 
