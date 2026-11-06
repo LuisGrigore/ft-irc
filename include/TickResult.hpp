@@ -2,11 +2,11 @@
 #define TICKRESULT_HPP
 
 /**
-* NOT IMPLEMENTED YET
-*/
+ * NOT IMPLEMENTED YET
+ */
 class TickResult {
-public:
-private:
+  public:
+  private:
 };
 
 #endif // TICKRESULT_HPP
