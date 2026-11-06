@@ -170,22 +170,28 @@ Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts
 ./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
 ```
 
-Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarlo, lo primero que pregunta es:
+
+> ¿Corresponde este trabajo a un issue de GitHub? [y/N]
+
+- **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
+- **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
 
 Ejemplos:
 
 ```bash
-# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
-./scripts/new-work.sh feature 42 implementar-comando-privmsg
+# Todo interactivo (el script pregunta tipo, nombre, etc.)
+./scripts/new-work.sh
 
-# Solo número de issue: crea devops/5 y su PR
-./scripts/new-work.sh 5
+# Tipo + número de issue (el nombre se deriva del título del issue)
+./scripts/new-work.sh feature 42
 
-# Solo nombre: crea feature/mi-feature y su PR
-./scripts/new-work.sh mi-feature
+# Tipo + issue + nombre personalizado
+./scripts/new-work.sh devops 5 actualizar-plan-implementacion
+
+# Solo número de issue (tipo y nombre se piden interactivamente)
+./scripts/new-work.sh 42
 ```
-
-Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
@@ -380,22 +386,28 @@ Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts
 ./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
 ```
 
-Los argumentos son opcionales y pueden ir en cualquier orden. El script detecta si cada uno es un tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un número de issue o un nombre descriptivo; los que falten se piden de forma interactiva.
+Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarlo, lo primero que pregunta es:
+
+> ¿Corresponde este trabajo a un issue de GitHub? [y/N]
+
+- **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
+- **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
 
 Ejemplos:
 
 ```bash
-# Con todo: crea feature/42-implementar-comando-privmsg y su PR hacia develop
-./scripts/new-work.sh feature 42 implementar-comando-privmsg
+# Todo interactivo (el script pregunta tipo, nombre, etc.)
+./scripts/new-work.sh
 
-# Solo número de issue: crea devops/5 y su PR
-./scripts/new-work.sh 5
+# Tipo + número de issue (el nombre se deriva del título del issue)
+./scripts/new-work.sh feature 42
 
-# Solo nombre: crea feature/mi-feature y su PR
-./scripts/new-work.sh mi-feature
+# Tipo + issue + nombre personalizado
+./scripts/new-work.sh devops 5 actualizar-plan-implementacion
+
+# Solo número de issue (tipo y nombre se piden interactivamente)
+./scripts/new-work.sh 42
 ```
-
-Cuando se indica un número de issue, el script consulta la API de GitHub (GraphQL) para obtener los sub-issues (hijos) de ese issue e incluye `Closes #N` en el cuerpo del PR (para el issue y cada uno de sus sub-issues), de modo que GitHub los cierre automáticamente al hacer merge del PR.
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
