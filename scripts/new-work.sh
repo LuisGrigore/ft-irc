@@ -34,6 +34,9 @@
 # After merge, remember to:
 #   - Delete the branch
 #   - Close the corresponding issue (if not closed automatically)
+#
+# The PR body always follows the GitHub pull request template
+# (.github/pull_request_template.md).
 
 set -euo pipefail
 
@@ -444,17 +447,47 @@ main() {
         pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "" "" "")
     fi
 
-    # Create PR
-    log_info "Creating Pull Request towards ${target}..."
-    local pr_url
-    pr_url=$(gh pr create \
+    # Check if a PR already exists for this branch towards the target
+    local existing_pr=""
+    existing_pr=$(gh pr list \
         --repo "$REPO" \
-        --base "$target" \
         --head "$branch_name" \
-        --title "$pr_title" \
-        --body "$pr_body" 2>&1)
+        --base "$target" \
+        --state open \
+        --json url,title,number \
+        --jq '.[0].url // empty' 2>/dev/null) || existing_pr=""
 
-    log_ok "Pull Request created: $pr_url"
+    local pr_url=""
+    if [ -n "$existing_pr" ]; then
+        pr_url="$existing_pr"
+        log_warn "A Pull Request already exists for this branch towards ${target}:"
+        log_ok "Pull Request: $pr_url"
+    else
+        # Create PR
+        log_info "Creating Pull Request towards ${target}..."
+        local create_output=""
+        create_output=$(gh pr create \
+            --repo "$REPO" \
+            --base "$target" \
+            --head "$branch_name" \
+            --title "$pr_title" \
+            --body "$pr_body" 2>&1) || {
+            log_error "Failed to create Pull Request. gh output:"
+            echo "$create_output"
+            exit 1
+        }
+        # gh pr create prints the PR URL to stdout; extract the first https://github.com/.../pull/NNN
+        pr_url=$(echo "$create_output" | grep -oE 'https://github.com/[^/]+/[^/]+/pull/[0-9]+' | head -n1)
+        if [ -z "$pr_url" ]; then
+            # Fallback: use the whole output if it looks like a URL
+            pr_url=$(echo "$create_output" | grep -oE 'https?://[^ ]+' | head -n1)
+        fi
+        if [ -z "$pr_url" ]; then
+            log_error "Could not determine the Pull Request URL from gh output."
+            exit 1
+        fi
+        log_ok "Pull Request created: $pr_url"
+    fi
 
     echo
     echo "========================================================================"
