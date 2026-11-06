@@ -2,12 +2,12 @@
 #include "counter.hpp"
 
 /*
- * CppUTest fuerza `#define new new(__FILE__, __LINE__)` a través de
- * MemoryLeakDetectorNewMacros.h (incluido desde TestHarness.h). Como el
- * proyecto compila con detección de fugas de CppUTest desactivada
- * (MEMORY_LEAK_DETECTION OFF), nadie provee el operador `new` de posicionamiento
- * que requiere esa macro. Se anula aquí, solo en las unidades de traducción de
- * las pruebas, para usar el `new` ordinario de la biblioteca estándar.
+ * CppUTest forces `#define new new(__FILE__, __LINE__)` through
+ * MemoryLeakDetectorNewMacros.h (included from TestHarness.h). As the
+ * project compiles with CppUTest leak detection disabled
+ * (MEMORY_LEAK_DETECTION OFF), no one provides the placement `new` operator
+ * required by that macro. It is undefined here, only in test translation
+ * units, to use the ordinary `new` from the standard library.
  */
 #undef new
 
@@ -42,8 +42,8 @@ TEST(Counter, ResetSetsValueToZero) {
 }
 
 /*
- * Ejercita reserva y liberacion de memoria dinamica en el monticulo, tal
- * como pide la seccion 13 del AgentGuide.md.
+ * Exercises dynamic memory allocation and deallocation on the heap, as
+ * required by section 13 of AgentGuide.md.
  */
 TEST(Counter, DynamicMemoryAllocationAndDeallocation) {
     Counter* counter = new Counter(10);
