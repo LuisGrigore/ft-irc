@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 #
-# sync-main.sh - Script para sincronizar develop hacia main mediante PR de tipo release.
+# sync-main.sh - Script to synchronize develop into main via a release PR.
 #
-# Sigue la metodología del repositorio:
-#   1. Verifica que gh está autenticado
-#   2. Verifica que estás en develop y está actualizado con origin/develop
-#   3. Crea una rama release/ desde develop
-#   4. Commitea cambios pendientes si los hay
-#   5. Sube la rama a origin
-#   6. Crea un Pull Request hacia main (tipo release)
+# Follows the repository methodology:
+#   1. Verifies gh is authenticated
+#   2. Verifies you are on develop and up to date with origin/develop
+#   3. Creates a release/ branch from develop
+#   4. Commits pending changes if any
+#   5. Pushes the branch to origin
+#   6. Creates a Pull Request towards main (type release)
 #
-# Uso:
-#   ./scripts/sync-main.sh [nombre-descriptivo]
+# Usage:
+#   ./scripts/sync-main.sh [descriptive-name]
 #
-# Ejemplo:
-#   ./scripts/sync-main.sh sincronizar-release-v1-0-0
+# Example:
+#   ./scripts/sync-main.sh sync-release-v1-0-0
 #
-# Después del merge, recuerda crear una etiqueta de versión en main (ej. v1.0.0).
+# After merge, remember to create a version tag on main (e.g. v1.0.0).
 
 set -euo pipefail
 
@@ -24,7 +24,7 @@ REPO="LuisGrigore/ft-irc"
 OWNER="LuisGrigore"
 REPO_NAME="ft-irc"
 
-# Colores para salida
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -32,7 +32,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # -----------------------------------------------------------------------------
-# Funciones de utilidad
+# Utility functions
 # -----------------------------------------------------------------------------
 log_info()  { echo -e "${BLUE}[INFO]${NC}  $*"; }
 log_ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
@@ -49,56 +49,56 @@ confirm() {
 }
 
 # -----------------------------------------------------------------------------
-# Validar que gh está autenticado
+# Validate that gh is authenticated
 # -----------------------------------------------------------------------------
 check_gh_auth() {
     if ! gh auth status &>/dev/null; then
-        log_error "GitHub CLI (gh) no está autenticado. Ejecuta: gh auth login"
+        log_error "GitHub CLI (gh) is not authenticated. Run: gh auth login"
         exit 1
     fi
 }
 
 # -----------------------------------------------------------------------------
-# Validar que estamos en develop y está actualizado
+# Validate that we are on develop and up to date
 # -----------------------------------------------------------------------------
 check_develop_branch() {
     local current
     current=$(git branch --show-current)
 
     if [ "$current" != "develop" ]; then
-        log_warn "No estás en la rama 'develop'. Estás en '$current'."
-        if confirm "¿Cambiar a 'develop' y hacer pull?"; then
+        log_warn "You are not on the 'develop' branch. You are on '$current'."
+        if confirm "Switch to 'develop' and pull?"; then
             git checkout develop
             git pull origin develop
         else
-            log_error "Debes estar en 'develop' para sincronizar con main."
+            log_error "You must be on 'develop' to synchronize with main."
             exit 1
         fi
     else
-        log_info "Estás en la rama 'develop'. Verificando actualizaciones..."
+        log_info "You are on the 'develop' branch. Checking for updates..."
         if git fetch origin develop 2>/dev/null; then
             local local_sha remote_sha
             local_sha=$(git rev-parse develop)
             remote_sha=$(git rev-parse origin/develop 2>/dev/null || echo "$local_sha")
             if [ "$local_sha" != "$remote_sha" ]; then
-                log_warn "Tu rama 'develop' no está actualizada con origin/develop."
-                if confirm "¿Hacer pull de origin/develop?"; then
+                log_warn "Your 'develop' branch is not up to date with origin/develop."
+                if confirm "Pull from origin/develop?"; then
                     git pull origin develop
                 else
-                    log_error "Debes sincronizar 'develop' antes de crear la rama release."
+                    log_error "You must synchronize 'develop' before creating the release branch."
                     exit 1
                 fi
             else
-                log_ok "'develop' está actualizado."
+                log_ok "'develop' is up to date."
             fi
         else
-            log_warn "No se pudo verificar con origin/develop. Asegúrate de tener conexión."
+            log_warn "Could not verify with origin/develop. Make sure you have connection."
         fi
     fi
 }
 
 # -----------------------------------------------------------------------------
-# Pedir nombre descriptivo (si no se proporciona)
+# Ask for descriptive name (if not provided)
 # -----------------------------------------------------------------------------
 ask_name() {
     local name="$1"
@@ -106,19 +106,19 @@ ask_name() {
         echo "$name"
         return
     fi
-    read -r -p "Nombre descriptivo (sin espacios, usa guiones): " name
+    read -r -p "Descriptive name (no spaces, use hyphens): " name
     echo "$name"
 }
 
 # -----------------------------------------------------------------------------
-# Normalizar nombre para rama (minúsculas, guiones en lugar de espacios)
+# Normalize name for branch (lowercase, hyphens instead of spaces)
 # -----------------------------------------------------------------------------
 normalize_name() {
     echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//'
 }
 
 # -----------------------------------------------------------------------------
-# Construir nombre de rama release
+# Build release branch name
 # -----------------------------------------------------------------------------
 build_branch_name() {
     local name="$1"
@@ -126,19 +126,19 @@ build_branch_name() {
     if [ -n "$name" ]; then
         echo "release/${name}"
     else
-        echo "release/sincronizar-develop-a-main"
+        echo "release/sync-develop-to-main"
     fi
 }
 
 # -----------------------------------------------------------------------------
-# Determinar rama destino del PR
+# Determine PR target branch
 # -----------------------------------------------------------------------------
 pr_target_branch() {
     echo "main"
 }
 
 # -----------------------------------------------------------------------------
-# Construir cuerpo del PR siguiendo la plantilla de GitHub
+# Build PR body following the GitHub PR template
 # -----------------------------------------------------------------------------
 build_pr_body() {
     local branch_name="$1"
@@ -200,14 +200,14 @@ EOF
 }
 
 # -----------------------------------------------------------------------------
-# Función principal
+# Main function
 # -----------------------------------------------------------------------------
 main() {
     check_gh_auth
     check_develop_branch
 
     # -------------------------------------------------------------------------
-    # Obtener nombre descriptivo
+    # Get descriptive name
     # -------------------------------------------------------------------------
     local nombre
     nombre=$(ask_name "${1:-}")
@@ -215,71 +215,71 @@ main() {
     local branch_name
     branch_name=$(build_branch_name "$nombre")
 
-    log_info "Rama release a crear: $branch_name"
+    log_info "Release branch to create: $branch_name"
 
-    # Verificar si la rama ya existe
+    # Verify branch does not already exist
     if git rev-parse --verify "$branch_name" &>/dev/null; then
-        log_error "La rama '$branch_name' ya existe localmente."
+        log_error "Branch '$branch_name' already exists locally."
         exit 1
     fi
 
     if git ls-remote --heads origin "$branch_name" | grep -q "$branch_name"; then
-        log_error "La rama '$branch_name' ya existe en origin."
+        log_error "Branch '$branch_name' already exists on origin."
         exit 1
     fi
 
-    # Verificar si hay cambios pendientes entre develop y main
+    # Check for pending changes between develop and main
     local diff_count=""
     diff_count=$(git log origin/main..develop --oneline 2>/dev/null | wc -l) || diff_count="0"
-    log_info "Commits pendientes entre main y develop: $diff_count"
+    log_info "Pending commits between main and develop: $diff_count"
 
-    # Crear rama release desde develop
-    log_info "Creando rama '$branch_name' desde develop..."
+    # Create release branch from develop
+    log_info "Creating branch '$branch_name' from develop..."
     git checkout -b "$branch_name"
 
-    # Si hay cambios sin commitear, preguntar qué hacer
+    # If there are uncommitted changes, ask what to do
     if ! git diff --quiet || ! git diff --cached --quiet; then
-        log_warn "Hay cambios sin commitear en el working tree."
-        if confirm "¿Hacer commit de los cambios antes de continuar?"; then
+        log_warn "There are uncommitted changes in the working tree."
+        if confirm "Commit the changes before continuing?"; then
             git add -A
             local commit_msg
-            read -r -p "Mensaje de commit: " commit_msg
+            read -r -p "Commit message: " commit_msg
             if [ -z "$commit_msg" ]; then
-                commit_msg="release: sincronizar develop hacia main ($nombre)"
+                commit_msg="release: synchronize develop into main ($nombre)"
             fi
             git commit -m "$commit_msg"
         else
-            log_error "Hay cambios sin commitear. Commítelos o descártelos primero."
+            log_error "There are uncommitted changes. Commit or discard them first."
             exit 1
         fi
     fi
 
-    # Verificar que haya al menos un commit de diferencia entre main y la rama release
+    # Verify there is at least one commit difference between main and the release branch
     local diff_commits=""
     diff_commits=$(git log origin/main.."$branch_name" --oneline 2>/dev/null) || diff_commits=""
     if [ -z "$diff_commits" ]; then
-        log_warn "No hay commits de diferencia entre main y '$branch_name'. Creando un commit vacío para permitir el PR..."
-        git commit --allow-empty -m "release: sincronizar develop hacia main ($nombre)"
-        log_ok "Commit vacío creado."
+        log_warn "No commit difference between main and '$branch_name'. Creating an empty commit to allow PR creation..."
+        git commit --allow-empty -m "release: synchronize develop into main ($nombre)"
+        log_ok "Empty commit created."
     fi
 
-    # Push de la rama
-    log_info "Subiendo rama a origin..."
+    # Push the branch
+    log_info "Pushing branch to origin..."
     git push -u origin "$branch_name"
 
-    # Determinar rama destino del PR
+    # Determine PR target branch
     local target="main"
 
-    # Obtener lista de archivos cambiados
+    # Get list of changed files
     local changed_files=""
     changed_files=$(git diff --name-only origin/main.."$branch_name" 2>/dev/null) || changed_files=""
 
-    # Construir cuerpo del PR
+    # Build PR title and body
     local pr_title pr_body
-    pr_title="release: sincronizar develop hacia main ($nombre)"
+    pr_title="release: synchronize develop into main ($nombre)"
     pr_body=$(build_pr_body "$branch_name" "$changed_files")
 
-    # Verificar si ya existe un PR abierto hacia main desde esta rama
+    # Check if a PR already exists towards main from this branch
     local existing_pr=""
     existing_pr=$(gh pr list \
         --repo "$REPO" \
@@ -292,11 +292,11 @@ main() {
     local pr_url=""
     if [ -n "$existing_pr" ]; then
         pr_url="$existing_pr"
-        log_warn "Ya existe un Pull Request abierto hacia main desde esta rama:"
+        log_warn "A Pull Request already exists towards main from this branch:"
         log_ok "Pull Request: $pr_url"
     else
-        # Crear PR
-        log_info "Creando Pull Request hacia main..."
+        # Create PR
+        log_info "Creating Pull Request towards main..."
         local create_output=""
         create_output=$(gh pr create \
             --repo "$REPO" \
@@ -308,7 +308,7 @@ main() {
             echo "$create_output"
             exit 1
         }
-        # Extraer la URL del PR
+        # Extract the PR URL
         pr_url=$(echo "$create_output" | grep -oE 'https://github.com/[^/]+/[^/]+/pull/[0-9]+' | head -n1)
         if [ -z "$pr_url" ]; then
             pr_url=$(echo "$create_output" | grep -oE 'https?://[^ ]+' | head -n1)
@@ -322,16 +322,16 @@ main() {
 
     echo
     echo "========================================================================"
-    log_ok "Resumen:"
-    echo "  - Rama: $branch_name"
+    log_ok "Summary:"
+    echo "  - Branch: $branch_name"
     log_ok "  - PR: $pr_url"
     echo "  - Target: main"
     echo ""
-    echo "Próximos pasos:"
-    echo "  1. Revisa que CI pase en el PR"
-    echo "  2. Cuando se apruebe, fusiona hacia main"
-    echo "  3. Después del merge, crea una etiqueta de versión en main (ej. v1.0.0)"
-    echo "  4. Elimina la rama: git branch -d $branch_name && git push origin --delete $branch_name"
+    echo "Next steps:"
+    echo "  1. Check that CI passes on the PR"
+    echo "  2. When approved, merge towards main"
+    echo "  3. After merge, create a version tag on main (e.g. v1.0.0)"
+    echo "  4. Delete the branch: git branch -d $branch_name && git push origin --delete $branch_name"
     echo "========================================================================"
 }
 
