@@ -37,15 +37,14 @@ class Client {
     void setHostname(const std::string& hostname);
     void setInputBuffer(const std::string& inputBuffer);
     void setOutputBuffer(const std::string& outputBuffer);
-    void setHostname(const std::string& hostname);
-    void set_authenticated(bool authenticated);
-    void set_registered(bool registered);
+    void setAuthenticated(bool authenticated);
+    void setRegistered(bool registered);
 
     // Predicates
-    bool is_authenticated() const;
-    bool is_registered() const;
-    bool is_closing() const;
-    void set_closing(bool closing);
+    bool isAuthenticated() const;
+    bool isRegistered() const;
+    bool isClosing() const;
+    void setClosing(bool closing);
 };
 
 #endif // CLIENT_HPP
