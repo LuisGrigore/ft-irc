@@ -1,4 +1,4 @@
-[0;34m[INFO][0m  Generating changelog for commit range: 9178eb0577017fcc2d22b07712aa6ad20222c205..HEAD
+[0;34m[INFO][0m  Generating changelog for commit range: main..develop
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -8,14 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2026-11-07
 
-### Generated from commit range: `9178eb0577017fcc2d22b07712aa6ad20222c205..HEAD`
+### Generated from commit range: `main..develop`
 
-### Features
 
-- [08cf85a](https://github.com/LuisGrigore/ft-irc/commit/08cf85a2b7fefc984f85c47ea4f9acbaebc8f800) forzar -Werror y -std=c++98 en el codigo del proyecto
 
 ### Devops
 
+- [a29ce24](https://github.com/LuisGrigore/ft-irc/commit/a29ce245120716d884c833ac108d1e7ae46f02b1) add sync scripts and changelog integration (**DEVOPS-197**)
+- [548fe32](https://github.com/LuisGrigore/ft-irc/commit/548fe321c2e320eeb34cf09496492d83c974b859) add-sync-scripts-and-changelog-integration
 - [a8db958](https://github.com/LuisGrigore/ft-irc/commit/a8db9582468ffe2d242fe332a83def0bd7f4aac0) add-changelog-generator
 - [ddebf7d](https://github.com/LuisGrigore/ft-irc/commit/ddebf7d615a51f62747c1c0c2e80274fc35cadf0) add-commit-message-template-and-fill-pr-body (issue #187)
 - [e024752](https://github.com/LuisGrigore/ft-irc/commit/e024752052082d40d15db37fab2b72aa62f3e380) refactor implementation plan - separate command infrastructure from registration commands
@@ -35,7 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+### Chore
 
+- [a22444d](https://github.com/LuisGrigore/ft-irc/commit/a22444dc508e15c0a13dd54c6ac2b3876ee541c7) add changelog generator and initial CHANGELOG (**DEVOPS-194**)
 
 ### Release
 
