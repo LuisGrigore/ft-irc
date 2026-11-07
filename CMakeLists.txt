@@ -68,13 +68,13 @@ target_compile_options(CppUTestExt PRIVATE
 # -----------------------------------------------------------------------------
 # Production library
 # -----------------------------------------------------------------------------
-add_library(counter STATIC src/counter.cpp)
-target_include_directories(counter PUBLIC include)
-target_compile_options(counter PRIVATE ${PROJECT_WARNING_FLAGS})
+add_library(ft_irc STATIC src/counter.cpp src/Client.cpp)
+target_include_directories(ft_irc PUBLIC include)
+target_compile_options(ft_irc PRIVATE ${PROJECT_WARNING_FLAGS})
 
 if(ENABLE_SANITIZERS AND (CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang)$"))
-    target_compile_options(counter PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
-    target_link_options(counter PRIVATE -fsanitize=address,undefined)
+    target_compile_options(ft_irc PRIVATE -fsanitize=address,undefined -fno-omit-frame-pointer)
+    target_link_options(ft_irc PRIVATE -fsanitize=address,undefined)
 endif()
 
 # -----------------------------------------------------------------------------

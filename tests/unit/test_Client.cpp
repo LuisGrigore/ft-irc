@@ -70,3 +70,43 @@ TEST(Client, ClientDynamicMemoryAllocationAndDeallocation) {
     CHECK_EQUAL(5, client->getFd());
     delete client;
 }
+
+TEST(Client, SetFdUpdatesValue_AC_006) {
+    Client client(5);
+    client.setFd(9);
+    CHECK_EQUAL(9, client.getFd());
+}
+
+TEST(Client, SetInputBufferUpdatesValue_AC_006) {
+    Client client(5);
+    client.setInputBuffer("NICK test\r\n");
+    STRCMP_EQUAL("NICK test\r\n", client.getInputBuffer().c_str());
+}
+
+TEST(Client, SetOutputBufferUpdatesValue_AC_006) {
+    Client client(5);
+    client.setOutputBuffer(":server 001 test :Welcome\r\n");
+    STRCMP_EQUAL(":server 001 test :Welcome\r\n", client.getOutputBuffer().c_str());
+}
+
+TEST(Client, SettersOverwritePreviousValue_AC_006) {
+    Client client(5);
+    client.setNick("first");
+    client.setNick("second");
+    STRCMP_EQUAL("second", client.getNick().c_str());
+}
+
+TEST(Client, SettersCanResetStateFlagsToFalse_AC_006) {
+    Client client(5);
+    client.setAuthenticated(true);
+    client.setRegistered(true);
+    client.setClosing(true);
+
+    client.setAuthenticated(false);
+    client.setRegistered(false);
+    client.setClosing(false);
+
+    CHECK_FALSE(client.isAuthenticated());
+    CHECK_FALSE(client.isRegistered());
+    CHECK_FALSE(client.isClosing());
+}
