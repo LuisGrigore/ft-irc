@@ -6,9 +6,10 @@
 #   1. Verifies gh is authenticated
 #   2. Verifies you are on develop and up to date with origin/develop
 #   3. Creates a release/ branch from develop
-#   4. Commits pending changes if any
-#   5. Pushes the branch to origin
-#   6. Creates a Pull Request towards main (type release)
+#   4. Updates CHANGELOG.md via generate-changelog.sh
+#   5. Commits pending changes if any
+#   6. Pushes the branch to origin
+#   7. Creates a Pull Request towards main (type release)
 #
 # Usage:
 #   ./scripts/sync-main.sh [descriptive-name]
@@ -138,11 +139,33 @@ pr_target_branch() {
 }
 
 # -----------------------------------------------------------------------------
+# Update CHANGELOG.md via generate-changelog.sh (sync mode)
+# -----------------------------------------------------------------------------
+update_changelog() {
+    log_info "Updating CHANGELOG.md via generate-changelog.sh (sync mode)..."
+    if [ -f scripts/generate-changelog.sh ]; then
+        if ./scripts/generate-changelog.sh sync CHANGELOG.md 2>&1; then
+            log_ok "CHANGELOG.md updated."
+        else
+            log_warn "generate-changelog.sh failed. Continuing without changelog update."
+        fi
+    else
+        log_warn "scripts/generate-changelog.sh not found. Skipping changelog update."
+    fi
+}
+
+# -----------------------------------------------------------------------------
 # Build PR body following the GitHub PR template
 # -----------------------------------------------------------------------------
 build_pr_body() {
     local branch_name="$1"
     local changed_files="$2"
+    local issue_num="$3"
+    local closes_section=""
+
+    if [ -n "$issue_num" ]; then
+        closes_section="Closes #${issue_num}"
+    fi
 
     cat <<EOF
 ## PR type
@@ -169,7 +192,7 @@ Indicate the traceability ID of the issue closed by this PR:
 
 > Example: \`Closes #123 — FEAT-001\`
 
-No associated issue.
+$(if [ -n "$issue_num" ]; then echo "Issue related: DEVOPS-${issue_num}"; echo ""; echo "${closes_section}"; else echo "No associated issue."; fi)
 
 ## Acceptance criteria completed
 
@@ -195,7 +218,7 @@ $(if [ -n "$changed_files" ]; then echo "${changed_files}" | while IFS= read -r 
 
 ## Merge instructions
 
-- **For PRs of type \`release\`:** merge \`develop\` into \`main\` (direct synchronization, no release pipeline). After merge on \`main\`, create a version tag (e.g. \`v1.0.0\`).
+- **For PRs of type \`release\`:** merge \`develop\` into \`main\` (direct synchronization, no release pipeline). After merge on \`main\`, create a version tag (e.g. v1.0.0).
 EOF
 }
 
@@ -237,6 +260,9 @@ main() {
     log_info "Creating branch '$branch_name' from develop..."
     git checkout -b "$branch_name"
 
+    # Update CHANGELOG before committing
+    update_changelog
+
     # If there are uncommitted changes, ask what to do
     if ! git diff --quiet || ! git diff --cached --quiet; then
         log_warn "There are uncommitted changes in the working tree."
@@ -277,7 +303,14 @@ main() {
     # Build PR title and body
     local pr_title pr_body
     pr_title="release: synchronize develop into main ($nombre)"
-    pr_body=$(build_pr_body "$branch_name" "$changed_files")
+
+    # Detect if this was triggered from a devops issue (look for DEVOPS-NNN in commit)
+    local issue_num=""
+    local last_commit_msg=""
+    last_commit_msg=$(git log -1 --format="%s" 2>/dev/null) || last_commit_msg=""
+    issue_num=$(extract_issue_number_from_commit "$last_commit_msg")
+
+    pr_body=$(build_pr_body "$branch_name" "$changed_files" "$issue_num")
 
     # Check if a PR already exists towards main from this branch
     local existing_pr=""
@@ -333,6 +366,19 @@ main() {
     echo "  3. After merge, create a version tag on main (e.g. v1.0.0)"
     echo "  4. Delete the branch: git branch -d $branch_name && git push origin --delete $branch_name"
     echo "========================================================================"
+}
+
+# -----------------------------------------------------------------------------
+# Extract issue number from a commit message (Closes #N or DEVOPS-NNN)
+# -----------------------------------------------------------------------------
+extract_issue_number_from_commit() {
+    local msg="$1"
+    local num=""
+    num=$(echo "$msg" | sed -n 's/.*Closes #\([0-9]*\).*/\1/p')
+    if [ -z "$num" ]; then
+        num=$(echo "$msg" | sed -n 's/.*DEVOPS-\([0-9]*\).*/\1/p')
+    fi
+    echo "$num"
 }
 
 main "$@"
