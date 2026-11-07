@@ -140,6 +140,61 @@ devops: add commit message template (DEVOPS-159) Closes #187
 
 All PRs created with [`scripts/new-work.sh`](scripts/new-work.sh) use traceability IDs in their titles and bodies.
 
+## Sync scripts usage
+
+### scripts/sync-develop.sh
+
+Push changes from a feature/hotfix/devops branch to `develop`. It updates the changelog, waits for CI checks to pass on the PR, and merges towards `develop` if there are no conflicts:
+
+```bash
+./scripts/sync-develop.sh [type] [descriptive-name]
+```
+
+Examples:
+
+```bash
+# Fully interactive
+./scripts/sync-develop.sh
+
+# Feature type with name
+./scripts/sync-develop.sh feature implement-client-getters
+
+# Devops type with name
+./scripts/sync-develop.sh devops add-changelog-generator
+```
+
+### scripts/sync-main.sh
+
+Synchronize `develop` into `main` via a release PR. It updates the changelog before creating the PR:
+
+```bash
+./scripts/sync-main.sh [descriptive-name]
+```
+
+Example:
+
+```bash
+# Sync release
+./scripts/sync-main.sh sync-release-v1-0-0
+```
+
+### scripts/generate-changelog.sh
+
+Automatically generate and update `CHANGELOG.md` from commit history:
+
+```bash
+./scripts/generate-changelog.sh [mode] [output-file]
+```
+
+Modes: `release` (from last tag to HEAD), `sync` (from develop to main), `all` (full history).
+
+Example:
+
+```bash
+# Full changelog
+./scripts/generate-changelog.sh all CHANGELOG.md
+```
+
 ## Uso del script auxiliar (scripts/new-work.sh)
 
 Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
@@ -174,6 +229,61 @@ Ejemplos:
 ```
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Uso de los scripts de sincronización
+
+### scripts/sync-develop.sh
+
+Sube cambios de una rama feature/hotfix/devops a `develop`. Actualiza el changelog, espera a que pasen las comprobaciones de CI en el PR, y fusiona hacia `develop` si no hay conflictos:
+
+```bash
+./scripts/sync-develop.sh [tipo] [nombre-descriptivo]
+```
+
+Ejemplos:
+
+```bash
+# Todo interactivo
+./scripts/sync-develop.sh
+
+# Tipo feature con nombre
+./scripts/sync-develop.sh feature implement-client-getters
+
+# Tipo devops con nombre
+./scripts/sync-develop.sh devops add-changelog-generator
+```
+
+### scripts/sync-main.sh
+
+Sincroniza `develop` hacia `main` mediante un PR de tipo release. Actualiza el changelog antes de crear el PR:
+
+```bash
+./scripts/sync-main.sh [nombre-descriptivo]
+```
+
+Ejemplo:
+
+```bash
+# Sincronizar release
+./scripts/sync-main.sh sync-release-v1-0-0
+```
+
+### scripts/generate-changelog.sh
+
+Genera y actualiza automáticamente `CHANGELOG.md` desde el historial de commits:
+
+```bash
+./scripts/generate-changelog.sh [modo] [archivo-salida]
+```
+
+Modos: `release` (desde el último tag hasta HEAD), `sync` (desde develop hasta main), `all` (historial completo).
+
+Ejemplo:
+
+```bash
+# Changelog completo
+./scripts/generate-changelog.sh all CHANGELOG.md
+```
 
 ## Plantilla de mensajes de commit
 
@@ -431,6 +541,61 @@ devops: add commit message template (DEVOPS-159) Closes #187
 
 All PRs created with [`scripts/new-work.sh`](scripts/new-work.sh) use traceability IDs in their titles and bodies.
 
+## Sync scripts usage
+
+### scripts/sync-develop.sh
+
+Push changes from a feature/hotfix/devops branch to `develop`. It updates the changelog, waits for CI checks to pass on the PR, and merges towards `develop` if there are no conflicts:
+
+```bash
+./scripts/sync-develop.sh [type] [descriptive-name]
+```
+
+Examples:
+
+```bash
+# Fully interactive
+./scripts/sync-develop.sh
+
+# Feature type with name
+./scripts/sync-develop.sh feature implement-client-getters
+
+# Devops type with name
+./scripts/sync-develop.sh devops add-changelog-generator
+```
+
+### scripts/sync-main.sh
+
+Synchronize `develop` into `main` via a release PR. It updates the changelog before creating the PR:
+
+```bash
+./scripts/sync-main.sh [descriptive-name]
+```
+
+Example:
+
+```bash
+# Sync release
+./scripts/sync-main.sh sync-release-v1-0-0
+```
+
+### scripts/generate-changelog.sh
+
+Automatically generate and update `CHANGELOG.md` from commit history:
+
+```bash
+./scripts/generate-changelog.sh [mode] [output-file]
+```
+
+Modes: `release` (from last tag to HEAD), `sync` (from develop to main), `all` (full history).
+
+Example:
+
+```bash
+# Full changelog
+./scripts/generate-changelog.sh all CHANGELOG.md
+```
+
 ## Uso del script auxiliar (scripts/new-work.sh)
 
 Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
@@ -465,6 +630,61 @@ Ejemplos:
 ```
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Uso de los scripts de sincronización
+
+### scripts/sync-develop.sh
+
+Sube cambios de una rama feature/hotfix/devops a `develop`. Actualiza el changelog, espera a que pasen las comprobaciones de CI en el PR, y fusiona hacia `develop` si no hay conflictos:
+
+```bash
+./scripts/sync-develop.sh [tipo] [nombre-descriptivo]
+```
+
+Ejemplos:
+
+```bash
+# Todo interactivo
+./scripts/sync-develop.sh
+
+# Tipo feature con nombre
+./scripts/sync-develop.sh feature implement-client-getters
+
+# Tipo devops con nombre
+./scripts/sync-develop.sh devops add-changelog-generator
+```
+
+### scripts/sync-main.sh
+
+Sincroniza `develop` hacia `main` mediante un PR de tipo release. Actualiza el changelog antes de crear el PR:
+
+```bash
+./scripts/sync-main.sh [nombre-descriptivo]
+```
+
+Ejemplo:
+
+```bash
+# Sincronizar release
+./scripts/sync-main.sh sync-release-v1-0-0
+```
+
+### scripts/generate-changelog.sh
+
+Genera y actualiza automáticamente `CHANGELOG.md` desde el historial de commits:
+
+```bash
+./scripts/generate-changelog.sh [modo] [archivo-salida]
+```
+
+Modos: `release` (desde el último tag hasta HEAD), `sync` (desde develop hasta main), `all` (historial completo).
+
+Ejemplo:
+
+```bash
+# Changelog completo
+./scripts/generate-changelog.sh all CHANGELOG.md
+```
 
 ## Plantilla de mensajes de commit
 
