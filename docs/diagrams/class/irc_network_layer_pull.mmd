@@ -34,10 +34,6 @@ classDiagram
         <<orchestrator>>
         - std::string password
         - std::set~int~ dirtyClients
-        - CommandDispatcher* dispatcher
-        - ClientManager* clientManager
-        - ChannelManager* channelManager
-        - NickManager* nickManager
         + IRCService(const std::string& password)
         + ~IRCService()
         + void onClientConnected(int fd)
