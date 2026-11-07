@@ -20,23 +20,30 @@ class Client {
     Client(int fd);
     ~Client();
 
+    // Getters
     int getFd() const;
     const std::string& getNick() const;
-    void setNick(const std::string& nick);
     const std::string& getUsername() const;
-    void setUsername(const std::string& username);
     const std::string& getRealname() const;
-    void setRealname(const std::string& realname);
     const std::string& getHostname() const;
-    void setHostname(const std::string& hostname);
     const std::string& getInputBuffer() const;
-    void setInputBuffer(const std::string& inputBuffer);
     const std::string& getOutputBuffer() const;
+
+    // Setters
+    void setFd(int fd);
+    void setNick(const std::string& nick);
+    void setUsername(const std::string& username);
+    void setRealname(const std::string& realname);
+    void setHostname(const std::string& hostname);
+    void setInputBuffer(const std::string& inputBuffer);
     void setOutputBuffer(const std::string& outputBuffer);
-    bool is_authenticated() const;
+    void setHostname(const std::string& hostname);
     void set_authenticated(bool authenticated);
-    bool is_registered() const;
     void set_registered(bool registered);
+
+    // Predicates
+    bool is_authenticated() const;
+    bool is_registered() const;
     bool is_closing() const;
     void set_closing(bool closing);
 };
