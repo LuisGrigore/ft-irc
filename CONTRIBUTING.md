@@ -91,7 +91,7 @@ All arguments are optional and can be given in any order. When executed, the fir
 - **If yes:** it asks for the issue number, fetches its title from GitHub, and uses it to build the branch name. The PR body includes `Closes #N` (for the issue and its sub-issues), so **GitHub closes them automatically on merge**.
 - **If no:** it interactively asks for the type (`feature`, `hotfix`, `devops`, `chore`, `release`), a descriptive name, and, if there are uncommitted changes, the commit message.
 
-The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md).
+The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md) and is pre-filled with the changed files, the PR type checkbox, the traceability ID, and checked checklist items that can be confirmed automatically.
 
 Examples:
 
@@ -111,6 +111,35 @@ Examples:
 
 More info: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+## Commit message template
+
+The project uses a commit message template stored in [`.gitmessage`](.gitmessage). It is activated via:
+
+```bash
+git config commit.template .gitmessage
+```
+
+The template enforces the convention:
+
+```
+<type>: <short description> [(<TRACEABILITY_ID>)] [Closes #<ISSUE_NUMBER>]
+```
+
+Where:
+- `<type>`: `feature`, `hotfix`, `devops`, `chore` or `release`
+- `<short description>`: imperative mood, lowercase, no period at the end
+- `<TRACEABILITY_ID>`: `FEAT-NNN`, `T-NNN`, `HOTFIX-NNN`, `DEVOPS-NNN` or `AC-NNN`
+- `<ISSUE_NUMBER>`: GitHub issue number closed by this commit (optional)
+
+Examples:
+
+```
+feature: implement Client getters and setters (FEAT-001) Closes #18
+devops: add commit message template (DEVOPS-159) Closes #187
+```
+
+All PRs created with [`scripts/new-work.sh`](scripts/new-work.sh) use traceability IDs in their titles and bodies.
+
 ## Uso del script auxiliar (scripts/new-work.sh)
 
 Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
@@ -126,7 +155,7 @@ Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarl
 - **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
 - **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
 
-El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md).
+El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md) y se rellena con los archivos modificados, el tipo de PR marcado, el ID de trazabilidad y los ítems del checklist que se pueden confirmar automáticamente.
 
 Ejemplos:
 
@@ -145,6 +174,35 @@ Ejemplos:
 ```
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Plantilla de mensajes de commit
+
+El proyecto usa una plantilla de mensajes de commit almacenada en [`.gitmessage`](.gitmessage). Se activa con:
+
+```bash
+git config commit.template .gitmessage
+```
+
+La plantilla impone la convención:
+
+```
+<tipo>: <descripción corta> [(<ID_TRAZABILIDAD>)] [Closes #<NÚMERO_ISSUE>]
+```
+
+Donde:
+- `<tipo>`: `feature`, `hotfix`, `devops`, `chore` o `release`
+- `<descripción corta>`: modo imperativo, minúsculas, sin punto final
+- `<ID_TRAZABILIDAD>`: `FEAT-NNN`, `T-NNN`, `HOTFIX-NNN`, `DEVOPS-NNN` o `AC-NNN`
+- `<NÚMERO_ISSUE>`: número de issue de GitHub cerrado por este commit (opcional)
+
+Ejemplos:
+
+```
+feature: implement Client getters and setters (FEAT-001) Closes #18
+devops: add commit message template (DEVOPS-159) Closes #187
+```
+
+Todos los PR creados con [`scripts/new-work.sh`](scripts/new-work.sh) usan IDs de trazabilidad en sus títulos y cuerpos.
 
 ## Pull requests
 
@@ -324,7 +382,7 @@ All arguments are optional and can be given in any order. When executed, the fir
 - **If yes:** it asks for the issue number, fetches its title from GitHub, and uses it to build the branch name. The PR body includes `Closes #N` (for the issue and its sub-issues), so **GitHub closes them automatically on merge**.
 - **If no:** it interactively asks for the type (`feature`, `hotfix`, `devops`, `chore`, `release`), a descriptive name, and, if there are uncommitted changes, the commit message.
 
-The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md).
+The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md) and is pre-filled with the changed files, the PR type checkbox, the traceability ID, and checked checklist items that can be confirmed automatically.
 
 Examples:
 
@@ -344,6 +402,35 @@ Examples:
 
 More info: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
+## Commit message template
+
+The project uses a commit message template stored in [`.gitmessage`](.gitmessage). It is activated via:
+
+```bash
+git config commit.template .gitmessage
+```
+
+The template enforces the convention:
+
+```
+<type>: <short description> [(<TRACEABILITY_ID>)] [Closes #<ISSUE_NUMBER>]
+```
+
+Where:
+- `<type>`: `feature`, `hotfix`, `devops`, `chore` or `release`
+- `<short description>`: imperative mood, lowercase, no period at the end
+- `<TRACEABILITY_ID>`: `FEAT-NNN`, `T-NNN`, `HOTFIX-NNN`, `DEVOPS-NNN` or `AC-NNN`
+- `<ISSUE_NUMBER>`: GitHub issue number closed by this commit (optional)
+
+Examples:
+
+```
+feature: implement Client getters and setters (FEAT-001) Closes #18
+devops: add commit message template (DEVOPS-159) Closes #187
+```
+
+All PRs created with [`scripts/new-work.sh`](scripts/new-work.sh) use traceability IDs in their titles and bodies.
+
 ## Uso del script auxiliar (scripts/new-work.sh)
 
 Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
@@ -359,7 +446,7 @@ Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarl
 - **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
 - **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
 
-El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md).
+El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md) y se rellena con los archivos modificados, el tipo de PR marcado, el ID de trazabilidad y los ítems del checklist que se pueden confirmar automáticamente.
 
 Ejemplos:
 
@@ -378,6 +465,35 @@ Ejemplos:
 ```
 
 Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Plantilla de mensajes de commit
+
+El proyecto usa una plantilla de mensajes de commit almacenada en [`.gitmessage`](.gitmessage). Se activa con:
+
+```bash
+git config commit.template .gitmessage
+```
+
+La plantilla impone la convención:
+
+```
+<tipo>: <descripción corta> [(<ID_TRAZABILIDAD>)] [Closes #<NÚMERO_ISSUE>]
+```
+
+Donde:
+- `<tipo>`: `feature`, `hotfix`, `devops`, `chore` o `release`
+- `<descripción corta>`: modo imperativo, minúsculas, sin punto final
+- `<ID_TRAZABILIDAD>`: `FEAT-NNN`, `T-NNN`, `HOTFIX-NNN`, `DEVOPS-NNN` o `AC-NNN`
+- `<NÚMERO_ISSUE>`: número de issue de GitHub cerrado por este commit (opcional)
+
+Ejemplos:
+
+```
+feature: implement Client getters and setters (FEAT-001) Closes #18
+devops: add commit message template (DEVOPS-159) Closes #187
+```
+
+Todos los PR creados con [`scripts/new-work.sh`](scripts/new-work.sh) usan IDs de trazabilidad en sus títulos y cuerpos.
 
 ## Pull requests
 
