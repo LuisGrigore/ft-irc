@@ -468,10 +468,10 @@ main() {
     local pr_title pr_body closes_section=""
     if [ -n "$issue_num" ]; then
         closes_section=$(build_closes_section "$issue_num")
-        pr_title="[${tipo}] ${nombre} (${tipo^^}-${issue_num})"
+        pr_title="${tipo}: ${nombre} (${tipo^^}-${issue_num})"
         pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "$issue_num" "$issue_title" "$closes_section" "$changed_files")
     else
-        pr_title="[${tipo}] ${nombre}"
+        pr_title="${tipo}: ${nombre}"
         pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "" "" "" "$changed_files")
     fi
 
