@@ -22,9 +22,9 @@ Each element has a unique traceability ID:
 
 | ID | Name | Short Description | Related Elements |
 |----|------|-------------------|------------------|
-| FEAT-001 | Core IRC Service & Client Management | IRCService orchestrator, Client entity, ClientManager, NickManager registries, registration flow (PASS/NICK/USER) | `irc_clients.mmd` |
+| FEAT-001 | Core IRC Service & Client Management | IRCService orchestrator, Client entity, ClientManager, NickManager registries | `irc_clients.mmd` |
 | FEAT-002 | Network Layer & Socket I/O | SocketService interface, TickResult, SocketServer, poll() event loop, non-blocking I/O | `irc_network_layer_pull.mmd` |
-| FEAT-003 | Command Parsing & Dispatching | IRCParser, IRCMessage, CommandDispatcher, CommandHandler chain, CommandFactory, CommandContext, ReplyFormatter | `irc_commands.mmd` |
+| FEAT-003 | Command Parsing & Dispatching | IRCParser, IRCMessage, CommandDispatcher, CommandHandler chain, CommandFactory, CommandContext, ReplyFormatter, registration commands (PASS/NICK/USER) | `irc_commands.mmd` |
 | FEAT-004 | Channel Management | ChannelManager registry, Channel entity, JOIN/PART, channel message broadcasting | `irc_channels.mmd` |
 | FEAT-005 | Channel Modes & Operator Commands | ChannelMode strategies (i, t, k, o, l), KICK, INVITE, TOPIC, MODE commands | `irc_channels.mmd` |
 | FEAT-006 | Private Messages & Notice | PRIVMSG and NOTICE commands between clients | `irc_commands.mmd` |
@@ -52,9 +52,9 @@ Each element has a unique traceability ID:
 | T-013 | Write unit tests for `IRCService` lifecycle (onClientConnected/onClientData/onClientDisconnected/tick) | Red | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
 | T-014 | Implement `IRCService` orchestrator (password, dirtyClients sets, tick method) | Green | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
 | T-015 | Refactor `IRCService` orchestration logic | Refactor | FEAT-001 | `irc_clients.mmd` |
-| T-016 | Write integration tests for registration flow (PASS → NICK → USER → registered) | Red | FEAT-001 | Subject Chapter IV |
-| T-017 | Implement registration command handling (`PASS`, `NICK`, `USER`) | Green | FEAT-001 | Subject Chapter IV |
-| T-018 | Refactor registration flow state machine | Refactor | FEAT-001 | Subject Chapter IV |
+| T-016 | Write integration tests for registration flow (PASS → NICK → USER → registered) | Red | FEAT-003 | Subject Chapter IV |
+| T-017 | Implement registration command handling (`PASS`, `NICK`, `USER`) | Green | FEAT-003 | Subject Chapter IV |
+| T-018 | Refactor registration flow state machine | Refactor | FEAT-003 | Subject Chapter IV |
 | T-019 | Write unit tests for `TickResult` struct fields and default values | Red | FEAT-002 | `irc_network_layer_pull.mmd` |
 | T-020 | Implement `TickResult` struct | Green | FEAT-002 | `irc_network_layer_pull.mmd` |
 | T-021 | Refactor `TickResult` for copy/move semantics | Refactor | FEAT-002 | `irc_network_layer_pull.mmd` |
@@ -176,17 +176,17 @@ Each element has a unique traceability ID:
 
 | ID | Description | Associated Element |
 |----|-------------|--------------------|
-| AC-001 | Clients must authenticate with `PASS` before any other command is accepted | FEAT-001 |
-| AC-002 | Clients can set a unique nickname via `NICK` | FEAT-001 |
-| AC-003 | Clients can set username/realname via `USER` | FEAT-001 |
-| AC-004 | A client is `registered` only after `PASS` + `NICK` + `USER` are complete | FEAT-001 |
+| AC-001 | Clients must authenticate with `PASS` before any other command is accepted | FEAT-003 |
+| AC-002 | Clients can set a unique nickname via `NICK` | FEAT-003 |
+| AC-003 | Clients can set username/realname via `USER` | FEAT-003 |
+| AC-004 | A client is `registered` only after `PASS` + `NICK` + `USER` are complete | FEAT-003 |
 | AC-005 | Nickname collisions are rejected | FEAT-001 |
 | AC-006 | `Client` unit tests pass for all getters/setters | T-001 / T-002 / T-003 |
 | AC-007 | `Client` buffer unit tests pass | T-004 / T-005 / T-006 |
 | AC-008 | `ClientManager` unit tests pass for add/remove/find operations | T-007 / T-008 / T-009 |
 | AC-009 | `NickManager` unit tests pass for reserve/release/isAvailable/isValid | T-010 / T-011 / T-012 |
 | AC-010 | `IRCService` compiles with `ClientManager` and `NickManager` ownership | T-013 / T-014 / T-015 |
-| AC-011 | Registration flow integration tests pass for `PASS`/`NICK`/`USER` sequences | T-016 / T-017 / T-018 |
+| AC-011 | Registration flow integration tests pass for `PASS`/`NICK`/`USER` sequences | FEAT-003 |
 | AC-012 | Server listens on the configured `port` and accepts TCP/IP connections | FEAT-002 |
 | AC-013 | Multiple clients can connect simultaneously without blocking or forking | FEAT-002 |
 | AC-014 | Single `poll()` (or equivalent) handles all read/write/listen operations | FEAT-002 |
@@ -290,8 +290,8 @@ Tasks are ordered so that tests for a feature are written before or alongside th
 
 Derived from `irc_clients.mmd` (IRCService orchestrator, Client entity, ClientManager/NickManager registries).
 
-**Tasks:** T-001 to T-018  
-**Acceptance Criteria:** AC-001 to AC-011  
+**Tasks:** T-001 to T-015  
+**Acceptance Criteria:** AC-005 to AC-010  
 **Depends on:** None
 
 ### FEAT-002 — Network Layer & Socket I/O
@@ -304,10 +304,10 @@ Derived from `irc_network_layer_pull.mmd` (`SocketService` interface, `TickResul
 
 ### FEAT-003 — Command Parsing & Dispatching
 
-Derived from `irc_commands.mmd` (`IRCParser`, `IRCMessage`, `CommandDispatcher`, `CommandHandler` chain, `CommandFactory`, `Command` interface, `XxxCommand`, `CommandContext`, `ReplyFormatter`).
+Derived from `irc_commands.mmd` (`IRCParser`, `IRCMessage`, `CommandDispatcher`, `CommandHandler` chain, `CommandFactory`, `Command` interface, `XxxCommand`, `CommandContext`, `ReplyFormatter`). Implements registration commands (`PASS`, `NICK`, `USER`).
 
-**Tasks:** T-037 to T-063  
-**Acceptance Criteria:** AC-022 to AC-034  
+**Tasks:** T-016 to T-018, T-037 to T-063  
+**Acceptance Criteria:** AC-001 to AC-004, AC-011, AC-022 to AC-034  
 **Depends on:** FEAT-001, FEAT-002
 
 ### FEAT-004 — Channel Management
