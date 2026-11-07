@@ -1,0 +1,10 @@
+<type>: <short description> [(<TRACEABILITY_ID>)] [Closes #<ISSUE_NUMBER>]
+
+<type>: one of feature, hotfix, devops, chore, release
+<short description>: imperative mood, lowercase, no period at the end
+<TRACEABILITY_ID>: FEAT-NNN, T-NNN, HOTFIX-NNN, DEVOPS-NNN or AC-NNN
+<ISSUE_NUMBER>: GitHub issue number closed by this commit (optional)
+
+Example:
+  feature: implement Client getters and setters (FEAT-001) Closes #18
+  devops: add commit message template (DEVOPS-159) Closes #187

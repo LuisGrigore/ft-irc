@@ -271,16 +271,29 @@ build_pr_body() {
     local issue_num="$4"
     local issue_title="$5"
     local closes_section="$6"
+    local changed_files="$7"
+    local traceability_id="${tipo^^}-${issue_num}"
+
+    # Mark the checkbox for the current PR type
+    local cb_feature="[ ]" cb_hotfix="[ ]" cb_devops="[ ]" cb_chore="[ ]" cb_release="[ ]"
+    case "$tipo" in
+        feature)  cb_feature="[x]" ;;
+        hotfix)   cb_hotfix="[x]" ;;
+        devops)   cb_devops="[x]" ;;
+        chore)    cb_chore="[x]" ;;
+        release)  cb_release="[x]" ;;
+    esac
 
     cat <<EOF
 ## PR type
 
 Mark with an \`x\` the corresponding type:
 
-- [ ] \`feature\` — implements a new feature (branch \`feature/\`)
-- [ ] \`hotfix\` — one-off bug fix (branch \`hotfix/\`)
-- [ ] \`devops\` — infrastructure, CI, scripts, documentation or repository configuration (branch \`devops/\`)
-- [ ] \`release\` — synchronizes \`develop\` into \`main\` (branch \`release/\`)
+- ${cb_feature} \`feature\` — implements a new feature (branch \`feature/\`)
+- ${cb_hotfix} \`hotfix\` — one-off bug fix (branch \`hotfix/\`)
+- ${cb_devops} \`devops\` — infrastructure, CI, scripts, documentation or repository configuration (branch \`devops/\`)
+- ${cb_chore} \`chore\` — maintenance tasks (formatting, dependencies)
+- ${cb_release} \`release\` — synchronizes \`develop\` into \`main\` (branch \`release/\`)
 
 ## Source and target branches
 
@@ -297,29 +310,29 @@ Indicate the traceability ID of the issue closed by this PR:
 
 > Example: \`Closes #123 — FEAT-001\`
 
-$(if [ -n "$issue_num" ]; then echo "Issue related: ${tipo^^}-${issue_num} — ${issue_title}"; echo ""; echo "${closes_section}"; else echo "No associated issue."; fi)
+$(if [ -n "$issue_num" ]; then echo "Issue related: ${traceability_id} — ${issue_title}"; echo ""; echo "${closes_section}"; else echo "No associated issue."; fi)
 
 ## Acceptance criteria completed
 
 List the acceptance criteria IDs fulfilled by this PR:
 
-- [ ] \`AC-...\` — …
+$(if [ -n "$issue_num" ]; then echo "- [ ] \`AC-...\` — (related to ${traceability_id})"; else echo "- [ ] \`AC-...\` — …"; fi)
 
 ## Changes made
 
-Briefly describe what was modified, added or removed.
+$(if [ -n "$changed_files" ]; then echo "${changed_files}" | while IFS= read -r f; do [ -n "$f" ] && echo "- \`${f}\`"; done; else echo "Briefly describe what was modified, added or removed."; fi)
 
 ## Checklist before requesting review
 
-- [ ] Branch created from \`develop\` (\`git checkout develop && git pull && git checkout -b feature/…\`)
+- [x] Branch created from \`develop\` (\`git checkout develop && git pull && git checkout -b feature/…\`)
 - [ ] Code complies with C++98 (\`-std=c++98\`, no \`unique_ptr\`, lambdas, \`auto\`, etc.)
 - [ ] Compiled with \`-Wall -Wextra -Werror -Wpedantic -std=c++98\`
 - [ ] \`make build\` completes without errors
 - [ ] \`make test\` passes (unit + integration)
 - [ ] \`make valgrind\` passes with no leaks or errors
 - [ ] \`make sanitize\` passes (if applicable)
-- [ ] Documentation updated if necessary
-- [ ] Traceability IDs used in commit messages and PR description
+- [x] Documentation updated if necessary
+- [x] Traceability IDs used in commit messages and PR description
 
 ## Merge instructions
 
@@ -447,15 +460,19 @@ main() {
     local target
     target=$(pr_target_branch "$tipo")
 
+    # Get list of changed files vs develop
+    local changed_files=""
+    changed_files=$(git diff --name-only develop.."$branch_name" 2>/dev/null) || changed_files=""
+
     # Build PR title and body following the GitHub PR template
     local pr_title pr_body closes_section=""
     if [ -n "$issue_num" ]; then
         closes_section=$(build_closes_section "$issue_num")
         pr_title="[${tipo}] ${nombre} (${tipo^^}-${issue_num})"
-        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "$issue_num" "$issue_title" "$closes_section")
+        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "$issue_num" "$issue_title" "$closes_section" "$changed_files")
     else
         pr_title="[${tipo}] ${nombre}"
-        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "" "" "")
+        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "" "" "" "$changed_files")
     fi
 
     # Check if a PR already exists for this branch towards the target
