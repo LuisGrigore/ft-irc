@@ -76,6 +76,76 @@ git push origin feature/short-description
 
 Then open the corresponding pull request (see next section).
 
+## Script helper usage (scripts/new-work.sh)
+
+To create a branch and a Pull Request in an assisted way, use the [`scripts/new-work.sh`](scripts/new-work.sh) script:
+
+```bash
+./scripts/new-work.sh [type] [issue-number] [descriptive-name]
+```
+
+All arguments are optional and can be given in any order. When executed, the first thing it asks is:
+
+> Does this work correspond to a GitHub issue? [y/N]
+
+- **If yes:** it asks for the issue number, fetches its title from GitHub, and uses it to build the branch name. The PR body includes `Closes #N` (for the issue and its sub-issues), so **GitHub closes them automatically on merge**.
+- **If no:** it interactively asks for the type (`feature`, `hotfix`, `devops`, `chore`, `release`), a descriptive name, and, if there are uncommitted changes, the commit message.
+
+The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md).
+
+Examples:
+
+```bash
+# Fully interactive (the script asks for type, name, etc.)
+./scripts/new-work.sh
+
+# Type + issue number (name is derived from the issue title)
+./scripts/new-work.sh feature 42
+
+# Type + issue + custom name
+./scripts/new-work.sh devops 5 update-docs
+
+# Only issue number (type and name are prompted interactively)
+./scripts/new-work.sh 42
+```
+
+More info: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Uso del script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarlo, lo primero que pregunta es:
+
+> ¿Corresponde este trabajo a un issue de GitHub? [y/N]
+
+- **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
+- **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
+
+El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md).
+
+Ejemplos:
+
+```bash
+# Todo interactivo (el script pregunta tipo, nombre, etc.)
+./scripts/new-work.sh
+
+# Tipo + número de issue (el nombre se deriva del título del issue)
+./scripts/new-work.sh feature 42
+
+# Tipo + issue + nombre personalizado
+./scripts/new-work.sh devops 5 actualizar-plan-implementacion
+
+# Solo número de issue (tipo y nombre se piden interactivamente)
+./scripts/new-work.sh 42
+```
+
+Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ## Pull requests
 
 Each PR must indicate its type in the pull request template:
@@ -238,6 +308,76 @@ git push origin feature/descripcion-corta
 ```
 
 Luego abrir el pull request correspondiente (ver siguiente sección).
+
+## Script helper usage (scripts/new-work.sh)
+
+To create a branch and a Pull Request in an assisted way, use the [`scripts/new-work.sh`](scripts/new-work.sh) script:
+
+```bash
+./scripts/new-work.sh [type] [issue-number] [descriptive-name]
+```
+
+All arguments are optional and can be given in any order. When executed, the first thing it asks is:
+
+> Does this work correspond to a GitHub issue? [y/N]
+
+- **If yes:** it asks for the issue number, fetches its title from GitHub, and uses it to build the branch name. The PR body includes `Closes #N` (for the issue and its sub-issues), so **GitHub closes them automatically on merge**.
+- **If no:** it interactively asks for the type (`feature`, `hotfix`, `devops`, `chore`, `release`), a descriptive name, and, if there are uncommitted changes, the commit message.
+
+The Pull Request body follows the [GitHub PR template](.github/pull_request_template.md).
+
+Examples:
+
+```bash
+# Fully interactive (the script asks for type, name, etc.)
+./scripts/new-work.sh
+
+# Type + issue number (name is derived from the issue title)
+./scripts/new-work.sh feature 42
+
+# Type + issue + custom name
+./scripts/new-work.sh devops 5 update-docs
+
+# Only issue number (type and name are prompted interactively)
+./scripts/new-work.sh 42
+```
+
+More info: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+## Uso del script auxiliar (scripts/new-work.sh)
+
+Para crear una rama y un Pull Request de forma asistida, usa el script [`scripts/new-work.sh`](scripts/new-work.sh):
+
+```bash
+./scripts/new-work.sh [tipo] [numero-issue] [nombre-descriptivo]
+```
+
+Todos los argumentos son opcionales y pueden ir en cualquier orden. Al ejecutarlo, lo primero que pregunta es:
+
+> ¿Corresponde este trabajo a un issue de GitHub? [y/N]
+
+- **Si sí:** pide el número de issue, obtiene su título de GitHub y lo usa para construir el nombre de la rama. El cuerpo del PR incluye `Closes #N` (para el issue y sus sub-issues), de modo que **GitHub los cierre automáticamente al hacer merge**.
+- **Si no:** pide de forma interactiva el tipo (`feature`, `hotfix`, `devops`, `chore`, `release`), un nombre descriptivo y, si hay cambios sin commitear, el mensaje de commit.
+
+El cuerpo del Pull Request sigue la [plantilla de PR de GitHub](.github/pull_request_template.md).
+
+Ejemplos:
+
+```bash
+# Todo interactivo (el script pregunta tipo, nombre, etc.)
+./scripts/new-work.sh
+
+# Tipo + número de issue (el nombre se deriva del título del issue)
+./scripts/new-work.sh feature 42
+
+# Tipo + issue + nombre personalizado
+./scripts/new-work.sh devops 5 actualizar-plan-implementacion
+
+# Solo número de issue (tipo y nombre se piden interactivamente)
+./scripts/new-work.sh 42
+```
+
+Más información: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Pull requests
 

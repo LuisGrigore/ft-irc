@@ -1,0 +1,524 @@
+#!/usr/bin/env bash
+#
+# new-work.sh - Helper script to start work following the project's contributing flow.
+#
+# Usage:
+#   ./scripts/new-work.sh [type] [issue-number] [descriptive-name]
+#
+# All arguments are optional and can be given in any order. The script detects
+# whether each argument is a type (feature/hotfix/devops/chore/release), an
+# issue number, or a descriptive name. Missing values are requested interactively.
+#
+# First, the script asks whether the work corresponds to a GitHub issue:
+#   - If yes: it asks for the issue number, fetches its title from GitHub, and
+#     uses it to build the branch name. The PR body includes "Closes #N" for the
+#     issue and its sub-issues, so GitHub closes them automatically on merge.
+#   - If no: it interactively asks for the type, a descriptive name, and an
+#     optional description.
+#
+# Examples:
+#   ./scripts/new-work.sh                          # fully interactive
+#   ./scripts/new-work.sh feature 42               # type + issue (name from issue title)
+#   ./scripts/new-work.sh devops 5 update-docs     # type + issue + custom name
+#   ./scripts/new-work.sh 42                       # only issue (type and name prompted)
+#
+# Supported types: feature, hotfix, devops, chore, release
+#
+# Flow:
+#   1. Verifies you are on develop and up to date with origin/develop
+#   2. Asks whether it corresponds to an issue and collects the needed data
+#   3. Creates the branch from develop named <type>/<issue>-<name>
+#   4. Pushes the branch to origin
+#   5. Creates a Pull Request towards develop (or main for release)
+#
+# After merge, remember to:
+#   - Delete the branch
+#   - Close the corresponding issue (if not closed automatically)
+#
+# The PR body always follows the GitHub pull request template
+# (.github/pull_request_template.md).
+
+set -euo pipefail
+
+REPO="LuisGrigore/ft-irc"
+OWNER="LuisGrigore"
+REPO_NAME="ft-irc"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# -----------------------------------------------------------------------------
+# Utility functions
+# -----------------------------------------------------------------------------
+log_info()  { echo -e "${BLUE}[INFO]${NC}  $*"; }
+log_ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+
+confirm() {
+    local prompt="$1"
+    read -r -p "${prompt} [y/N]: " response
+    case "$response" in
+        [yY][eE][sS]|[yY]) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# -----------------------------------------------------------------------------
+# Validate that gh is authenticated
+# -----------------------------------------------------------------------------
+check_gh_auth() {
+    if ! gh auth status &>/dev/null; then
+        log_error "GitHub CLI (gh) is not authenticated. Run: gh auth login"
+        exit 1
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Validate that we are on develop and up to date
+# -----------------------------------------------------------------------------
+check_develop_branch() {
+    local current
+    current=$(git branch --show-current)
+
+    if [ "$current" != "develop" ]; then
+        log_warn "You are not on the 'develop' branch. You are on '$current'."
+        if confirm "Switch to 'develop' and pull?"; then
+            git checkout develop
+            git pull origin develop
+        else
+            log_error "You must be on 'develop' to start work."
+            exit 1
+        fi
+    else
+        log_info "You are on the 'develop' branch. Checking for updates..."
+        if git fetch origin develop 2>/dev/null; then
+            local local_sha remote_sha
+            local_sha=$(git rev-parse develop)
+            remote_sha=$(git rev-parse origin/develop 2>/dev/null || echo "$local_sha")
+            if [ "$local_sha" != "$remote_sha" ]; then
+                log_warn "Your 'develop' branch is not up to date with origin/develop."
+                if confirm "Pull from origin/develop?"; then
+                    git pull origin develop
+                else
+                    log_error "You must synchronize 'develop' before creating a branch."
+                    exit 1
+                fi
+            else
+                log_ok "'develop' is up to date."
+            fi
+        else
+            log_warn "Could not verify with origin/develop. Make sure you have connection."
+        fi
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Ask for change type (menu if not provided)
+# -----------------------------------------------------------------------------
+ask_type() {
+    local tipo="$1"
+    if [ -n "$tipo" ]; then
+        echo "$tipo"
+        return
+    fi
+
+    echo "Available change types:" >&2
+    echo "  1) feature  - Implement a new feature" >&2
+    echo "  2) hotfix   - One-off bug fix" >&2
+    echo "  3) devops   - Infrastructure, CI, documentation, repo" >&2
+    echo "  4) chore    - Maintenance tasks (formatting, dependencies)" >&2
+    echo "  5) release  - Synchronize develop into main" >&2
+    echo >&2
+    read -r -p "Select the type (1-5 or name): " choice
+
+    case "$choice" in
+        1|feature) echo "feature" ;;
+        2|hotfix)  echo "hotfix" ;;
+        3|devops)  echo "devops" ;;
+        4|chore)   echo "chore" ;;
+        5|release) echo "release" ;;
+        feature|hotfix|devops|chore|release) echo "$choice" ;;
+        *) log_error "Invalid type: '$choice'"; exit 1 ;;
+    esac
+}
+
+# -----------------------------------------------------------------------------
+# Ask for issue number (if not provided)
+# -----------------------------------------------------------------------------
+ask_issue_number() {
+    local num="$1"
+    if [ -n "$num" ]; then
+        echo "$num"
+        return
+    fi
+    read -r -p "Issue number: " num
+    echo "$num"
+}
+
+# -----------------------------------------------------------------------------
+# Ask for descriptive name (if not provided)
+# -----------------------------------------------------------------------------
+ask_name() {
+    local name="$1"
+    if [ -n "$name" ]; then
+        echo "$name"
+        return
+    fi
+    read -r -p "Descriptive name (no spaces, use hyphens): " name
+    echo "$name"
+}
+
+# -----------------------------------------------------------------------------
+# Normalize name for branch (lowercase, hyphens instead of spaces)
+# -----------------------------------------------------------------------------
+normalize_name() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//'
+}
+
+# -----------------------------------------------------------------------------
+# Build branch name
+# -----------------------------------------------------------------------------
+build_branch_name() {
+    local tipo="$1"
+    local issue_num="$2"
+    local name="$3"
+
+    if [ -n "$issue_num" ] && [ -n "$name" ]; then
+        echo "${tipo}/${issue_num}-${name}"
+    elif [ -n "$issue_num" ]; then
+        echo "${tipo}/${issue_num}"
+    elif [ -n "$name" ]; then
+        echo "${tipo}/${name}"
+    else
+        echo "${tipo}/sin-nombre"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Determine PR target branch
+# -----------------------------------------------------------------------------
+pr_target_branch() {
+    local tipo="$1"
+    if [ "$tipo" = "release" ]; then
+        echo "main"
+    else
+        echo "develop"
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# Get issue title via gh
+# -----------------------------------------------------------------------------
+get_issue_title() {
+    local issue_num="$1"
+    local title=""
+    title=$(gh issue view "$issue_num" --json title --jq '.title' 2>/dev/null) || title=""
+    echo "$title"
+}
+
+# -----------------------------------------------------------------------------
+# Get sub-issues (children) of an issue via GraphQL
+# Returns a list of issue numbers, one per line.
+# -----------------------------------------------------------------------------
+get_sub_issues() {
+    local issue_num="$1"
+
+    if ! command -v jq &>/dev/null; then
+        log_warn "jq is not installed; sub-issues for issue #$issue_num cannot be fetched."
+        return
+    fi
+
+    local result=""
+    result=$(gh api graphql \
+        -f query='query($owner: String!, $repo: String!, $number: Int!) { repository(owner: $owner, name: $repo) { issue(number: $number) { subIssues(first: 100) { nodes { number title state } } } } }' \
+        -f owner="$OWNER" \
+        -f repo="$REPO_NAME" \
+        -F number="$issue_num" 2>/dev/null) || result=""
+
+    if [ -z "$result" ]; then
+        return
+    fi
+
+    echo "$result" | jq -r '.data.repository.issue.subIssues.nodes[].number // empty' 2>/dev/null || true
+}
+
+# -----------------------------------------------------------------------------
+# Build the "Closes #N" section for the PR body (issue + sub-issues)
+# -----------------------------------------------------------------------------
+build_closes_section() {
+    local issue_num="$1"
+    local lines="Closes #${issue_num}"
+    local child
+    while IFS= read -r child; do
+        [ -n "$child" ] && lines="${lines}
+Closes #${child}"
+    done < <(get_sub_issues "$issue_num")
+    echo "$lines"
+}
+
+# -----------------------------------------------------------------------------
+# Build PR body following the GitHub pull request template
+# -----------------------------------------------------------------------------
+build_pr_body() {
+    local tipo="$1"
+    local branch_name="$2"
+    local target="$3"
+    local issue_num="$4"
+    local issue_title="$5"
+    local closes_section="$6"
+
+    cat <<EOF
+## PR type
+
+Mark with an \`x\` the corresponding type:
+
+- [ ] \`feature\` — implements a new feature (branch \`feature/\`)
+- [ ] \`hotfix\` — one-off bug fix (branch \`hotfix/\`)
+- [ ] \`devops\` — infrastructure, CI, scripts, documentation or repository configuration (branch \`devops/\`)
+- [ ] \`release\` — synchronizes \`develop\` into \`main\` (branch \`release/\`)
+
+## Source and target branches
+
+- **Source branch:** \`${branch_name}\`
+- **Target branch:** \`${target}\`
+
+## Related issue(s)
+
+Indicate the traceability ID of the issue closed by this PR:
+
+- Feature: \`FEAT-001\`
+- Task: \`T-001\`
+- Hotfix: \`HOTFIX-001\`
+
+> Example: \`Closes #123 — FEAT-001\`
+
+$(if [ -n "$issue_num" ]; then echo "Issue related: ${tipo^^}-${issue_num} — ${issue_title}"; echo ""; echo "${closes_section}"; else echo "No associated issue."; fi)
+
+## Acceptance criteria completed
+
+List the acceptance criteria IDs fulfilled by this PR:
+
+- [ ] \`AC-...\` — …
+
+## Changes made
+
+Briefly describe what was modified, added or removed.
+
+## Checklist before requesting review
+
+- [ ] Branch created from \`develop\` (\`git checkout develop && git pull && git checkout -b feature/…\`)
+- [ ] Code complies with C++98 (\`-std=c++98\`, no \`unique_ptr\`, lambdas, \`auto\`, etc.)
+- [ ] Compiled with \`-Wall -Wextra -Werror -Wpedantic -std=c++98\`
+- [ ] \`make build\` completes without errors
+- [ ] \`make test\` passes (unit + integration)
+- [ ] \`make valgrind\` passes with no leaks or errors
+- [ ] \`make sanitize\` passes (if applicable)
+- [ ] Documentation updated if necessary
+- [ ] Traceability IDs used in commit messages and PR description
+
+## Merge instructions
+
+- **For PRs of type \`feature\`, \`hotfix\` or \`devops\`:** merge into \`develop\`, **delete the branch** after merge, and **close the corresponding issue** (feature/task/hotfix) when all its acceptance criteria are completed.
+- **For PRs of type \`release\`:** merge \`develop\` into \`main\` (direct synchronization, no release pipeline). After merge on \`main\`, create a version tag (e.g. \`v1.0.0\`).
+EOF
+}
+
+# -----------------------------------------------------------------------------
+# Main function
+# -----------------------------------------------------------------------------
+main() {
+    check_gh_auth
+    check_develop_branch
+
+    # -------------------------------------------------------------------------
+    # Process positional arguments (optional, any order)
+    # -------------------------------------------------------------------------
+    local tipo="" issue_num="" nombre=""
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            feature|hotfix|devops|chore|release)
+                [ -z "$tipo" ] && tipo="$arg" || { log_error "Several types provided."; exit 1; }
+                ;;
+            [0-9]*)
+                [ -z "$issue_num" ] && issue_num="$arg" || { log_error "Several issue numbers provided."; exit 1; }
+                ;;
+            *)
+                [ -z "$nombre" ] && nombre="$arg" || { log_error "Several names provided."; exit 1; }
+                ;;
+        esac
+    done
+
+    # -------------------------------------------------------------------------
+    # Ask whether it corresponds to a GitHub issue
+    # -------------------------------------------------------------------------
+    local es_issue=""
+    read -r -p "Does this work correspond to a GitHub issue? [y/N]: " es_issue
+
+    local issue_title=""
+    if [ "$es_issue" = "y" ] || [ "$es_issue" = "Y" ]; then
+        # ---- Flow with issue ----
+        issue_num=$(ask_issue_number "$issue_num")
+
+        issue_title=$(get_issue_title "$issue_num")
+        if [ -z "$issue_title" ]; then
+            log_error "Could not fetch issue #$issue_num. Check that it exists and you have access."
+            exit 1
+        fi
+        log_ok "Issue #$issue_num: $issue_title"
+
+        # Use the issue title as the name if none was given
+        if [ -z "$nombre" ]; then
+            nombre=$(normalize_name "$issue_title")
+            log_info "Name derived from issue: $nombre"
+        fi
+
+        tipo=$(ask_type "$tipo")
+    else
+        # ---- Flow without issue (fully interactive) ----
+        tipo=$(ask_type "$tipo")
+        nombre=$(ask_name "$nombre")
+        issue_num=""
+    fi
+
+    nombre=$(normalize_name "$nombre")
+    local branch_name
+    branch_name=$(build_branch_name "$tipo" "$issue_num" "$nombre")
+
+    log_info "Branch to create: $branch_name"
+
+    # Verify branch does not already exist
+    if git rev-parse --verify "$branch_name" &>/dev/null; then
+        log_error "Branch '$branch_name' already exists locally."
+        exit 1
+    fi
+
+    if git ls-remote --heads origin "$branch_name" | grep -q "$branch_name"; then
+        log_error "Branch '$branch_name' already exists on origin."
+        exit 1
+    fi
+
+    # Create branch from develop
+    log_info "Creating branch '$branch_name' from develop..."
+    git checkout -b "$branch_name"
+
+    # If there are uncommitted changes, ask what to do
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        log_warn "There are uncommitted changes in the working tree."
+        if confirm "Commit the changes before continuing?"; then
+            git add -A
+            local commit_msg
+            read -r -p "Commit message: " commit_msg
+            if [ -z "$commit_msg" ]; then
+                if [ -n "$issue_num" ]; then
+                    commit_msg="${tipo}: $nombre (issue #$issue_num)"
+                else
+                    commit_msg="${tipo}: $nombre"
+                fi
+            fi
+            git commit -m "$commit_msg"
+        else
+            log_error "There are uncommitted changes. Commit or discard them first."
+            exit 1
+        fi
+    fi
+
+    # Push the branch
+    log_info "Pushing branch to origin..."
+    git push -u origin "$branch_name"
+
+    # Ensure there is at least one commit difference between the branch and develop,
+    # otherwise GitHub will not allow creating a Pull Request.
+    local diff_commits=""
+    diff_commits=$(git log develop.."$branch_name" --oneline 2>/dev/null) || diff_commits=""
+    if [ -z "$diff_commits" ]; then
+        log_warn "No commit difference between '$branch_name' and 'develop'. Creating an empty commit to allow PR creation..."
+        git commit --allow-empty -m "${tipo}: $nombre"
+        git push origin "$branch_name"
+        log_ok "Empty commit pushed."
+    fi
+
+    # Determine PR target branch
+    local target
+    target=$(pr_target_branch "$tipo")
+
+    # Build PR title and body following the GitHub PR template
+    local pr_title pr_body closes_section=""
+    if [ -n "$issue_num" ]; then
+        closes_section=$(build_closes_section "$issue_num")
+        pr_title="[${tipo}] ${nombre} (${tipo^^}-${issue_num})"
+        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "$issue_num" "$issue_title" "$closes_section")
+    else
+        pr_title="[${tipo}] ${nombre}"
+        pr_body=$(build_pr_body "$tipo" "$branch_name" "$target" "" "" "")
+    fi
+
+    # Check if a PR already exists for this branch towards the target
+    local existing_pr=""
+    existing_pr=$(gh pr list \
+        --repo "$REPO" \
+        --head "$branch_name" \
+        --base "$target" \
+        --state open \
+        --json url,title,number \
+        --jq '.[0].url // empty' 2>/dev/null) || existing_pr=""
+
+    local pr_url=""
+    if [ -n "$existing_pr" ]; then
+        pr_url="$existing_pr"
+        log_warn "A Pull Request already exists for this branch towards ${target}:"
+        log_ok "Pull Request: $pr_url"
+    else
+        # Create PR
+        log_info "Creating Pull Request towards ${target}..."
+        local create_output=""
+        create_output=$(gh pr create \
+            --repo "$REPO" \
+            --base "$target" \
+            --head "$branch_name" \
+            --title "$pr_title" \
+            --body "$pr_body" 2>&1) || {
+            log_error "Failed to create Pull Request. gh output:"
+            echo "$create_output"
+            exit 1
+        }
+        # gh pr create prints the PR URL to stdout; extract the first https://github.com/.../pull/NNN
+        pr_url=$(echo "$create_output" | grep -oE 'https://github.com/[^/]+/[^/]+/pull/[0-9]+' | head -n1)
+        if [ -z "$pr_url" ]; then
+            # Fallback: use the whole output if it looks like a URL
+            pr_url=$(echo "$create_output" | grep -oE 'https?://[^ ]+' | head -n1)
+        fi
+        if [ -z "$pr_url" ]; then
+            log_error "Could not determine the Pull Request URL from gh output."
+            exit 1
+        fi
+        log_ok "Pull Request created: $pr_url"
+    fi
+
+    echo
+    echo "========================================================================"
+    log_ok "Summary:"
+    echo "  - Branch: $branch_name"
+    log_ok "  - PR: $pr_url"
+    echo "  - Target: $target"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Implement the changes in branch $branch_name"
+    echo "  2. Commit and push: git push origin $branch_name"
+    echo "  3. Check that CI passes on the PR"
+    echo "  4. When approved, merge towards $target"
+    echo "  5. Delete the branch: git branch -d $branch_name && git push origin --delete $branch_name"
+    if [ -n "$issue_num" ]; then
+        echo "  6. GitHub will automatically close issue #$issue_num and its sub-issues on merge."
+    else
+        echo "  6. No associated issue; close manually if applicable."
+    fi
+    echo "========================================================================"
+}
+
+main "$@"

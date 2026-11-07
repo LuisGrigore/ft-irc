@@ -7,7 +7,6 @@ classDiagram
         - std::set~int~ closeRequests
         - ClientManager* clientManager
         - NickManager* nickManager
-        - ChannelManager* channelManager
         + void onClientConnected(int fd)
         + void onClientData(int fd, const std::string& data)
         + void onClientDisconnected(int fd)
@@ -66,11 +65,9 @@ classDiagram
 
     class ChannelManager {
         <<registry>>
-        + void removeClientFromAll(Client* client)
     }
 
     IRCService *-- ClientManager : owns
     IRCService *-- NickManager : owns
-    IRCService ..> ChannelManager : removeClientFromAll on disconnect
     ClientManager --> Client : map of clients
     IRCService ..> Client : appendInput / popLine / takeOutput
