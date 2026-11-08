@@ -1,0 +1,916 @@
+# =============================================================================
+# ft_irc — Implementation Plan (single source of truth)
+# =============================================================================
+# Hierarchy:  features[] -> { acceptance_criteria[], tasks[] }  (ACs hang from features, as in the .md)
+#
+# Rendering rules for the Markdown generator script:
+#   * Any string in `related_elements` ending in ".mmd" is rendered as inline
+#     code (`file.mmd`); any other string (e.g. "Subject Chapter IV") is
+#     rendered as plain text. Multiple elements are joined with ", ".
+#   * Strings may contain inline Markdown (backticks, **bold**); emit as-is.
+#   * Section 1 (Features Table)      <- features[*]  (id, name, short_description, related_elements)
+#   * Section 2 (Tasks Table)         <- features[*].tasks[*]  (id, description, tdd_step,
+#                                         parent feature id, related_elements), in YAML order
+#   * Section 3 (Acceptance Criteria) <- features[*].acceptance_criteria[*]
+#                                         (id, description, "Associated Element" = parent FEAT id),
+#                                         sorted by AC id
+#   * Section 4 (Detailed Breakdown)  <- features[*].detailed_description, plus derived values:
+#                                         Tasks: first..last task id of the feature
+#                                         Acceptance Criteria: first..last AC id of the feature
+#                                         Depends on: depends_on joined by ", " ("None" if empty),
+#                                         or `depends_on_label` if present
+#   * Dependency Summary table        <- features[*].depends_on + dependency_rationale
+#                                         "<ids or None> (<dependency_rationale>)", or
+#                                         "<depends_on_label> (<dependency_rationale>)" if label present
+#   * constraints.items[*]: "- **label**{separator}text" (separator defaults to ": ");
+#                           if `items` (list) is given instead of `text`, render each entry as
+#                           inline code joined by ", ".
+#   * Document order: title, intro/sources, id_prefixes, 1, 2, 3, constraints,
+#                     tdd_methodology, 4, dependency summary.
+# =============================================================================
+
+document:
+  title: Implementation Plan
+  intro: "Traceability plan for the **ft_irc** IRC server project, derived from:"
+  sources:
+    - en.subject.pdf (project requirements, Chapter IV — Mandatory Part)
+    - docs/diagrams/class/irc_clients.mmd
+    - docs/diagrams/class/irc_network_layer_pull.mmd
+    - docs/diagrams/class/irc_commands.mmd
+    - docs/diagrams/class/irc_channels.mmd
+    - docs/diagrams/class/irc_registration.mmd
+    - docs/diagrams/class/irc_robustness.mmd
+  id_scheme_intro: "Each element has a unique traceability ID:"
+  id_prefixes:
+    - prefix: FEAT
+      meaning: Independent feature (user-facing capability)
+    - prefix: T
+      meaning: Task (implementation step, child of a feature)
+    - prefix: AC
+      meaning: Acceptance criterion (verifiable outcome)
+
+constraints:
+  title: Constraints from the Subject (applied to all features)
+  items:
+    - label: Language
+      text: "C++ 98 only (`-std=c++98`, `-Wall -Wextra -Werror`)"
+    - label: Executable name
+      text: "`ircserv`"
+    - label: Arguments
+      text: "`./ircserv <port> <password>`"
+    - label: Makefile rules
+      text: "`NAME`, `all`, `clean`, `fclean`, `re` (no unnecessary relinking)"
+    - label: No forking
+      text: "all I/O non-blocking; single `poll()` (or equivalent: `select`, `kqueue`, `epoll`)"
+      separator: "; "
+    - label: No errno-based decisions
+      text: "after `read`/`recv`/`write`/`send`"
+      separator: " "
+    - label: No IRC client
+      text: ", **no server-to-server communication**"
+      separator: ""
+    - label: TCP/IP
+      text: "(v4 or v6)"
+      separator: " "
+    - label: Allowed external functions
+      items: [socket, close, setsockopt, getsockname, getprotobyname, gethostbyname, getaddrinfo, freeaddrinfo, bind, connect, listen, accept, htons, htonl, ntohs, ntohl, inet_addr, inet_ntoa, inet_ntop, send, recv, signal, sigaction, sigemptyset, sigfillset, sigaddset, sigdelset, sigismember, lseek, fstat, fcntl, poll]
+    - label: Bonus
+      text: "(only if mandatory is perfect): file transfer, bot"
+      separator: " "
+    - label: Build system
+      text: "The existing CMake/Makefile infrastructure will be used for development. The subject-compliant Makefile (`NAME`, `all`, `clean`, `fclean`, `re`) will be implemented as FEAT-009 after the core server is functional, and then adjusted to match the 42 guidelines."
+
+tdd_methodology:
+  title: TDD Methodology (applied to all tasks)
+  intro: "Every task follows the **Test-Driven Development** cycle:"
+  steps:
+    - name: Red
+      description: Write a failing test (unit or integration) that specifies the expected behavior.
+    - name: Green
+      description: Implement the minimum production code required to make the test pass.
+    - name: Refactor
+      description: Clean up the code while keeping tests passing; ensure `-Wall -Wextra -Werror -std=c++98` compliance.
+  ordering_note: Tasks are ordered so that tests for a feature are written before or alongside the production code they validate.
+
+features:
+  # ---------------------------------------------------------------------------
+  - id: FEAT-001
+    name: Core IRC Service & Client Management
+    short_description: IRCService orchestrator, Client entity, ClientManager, NickManager registries
+    detailed_description: "Derived from `irc_clients.mmd` (IRCService orchestrator, Client entity, ClientManager/NickManager registries)."
+    related_elements: ["irc_clients.mmd"]
+    depends_on: []
+    dependency_rationale: core service & clients
+    acceptance_criteria:
+      - id: AC-001
+        description: "`Client` unit tests pass for all getters/setters"
+      - id: AC-002
+        description: "`Client` buffer unit tests pass"
+      - id: AC-003
+        description: "`ClientManager` unit tests pass for add/remove/find operations"
+      - id: AC-004
+        description: "`NickManager` unit tests pass for reserve/release/isAvailable/isValid"
+      - id: AC-005
+        description: "`IRCService` compiles with `ClientManager` and `NickManager` ownership"
+      - id: AC-006
+        description: "Nickname collisions are rejected"
+    tasks:
+      - id: T-001
+        description: "Write unit tests for `Client` getters/setters (nick, username, realname, hostname, authenticated, registered, closing)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd"]
+      - id: T-002
+        description: "Implement `Client` class fields and getter/setter methods"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd"]
+      - id: T-003
+        description: "Refactor `Client` for C++98 compliance and warning-free compilation"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
+      - id: T-004
+        description: "Write unit tests for `Client` buffer operations (`appendInput`, `popLine`, `appendOutput`, `takeOutput`)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd"]
+      - id: T-005
+        description: "Implement `Client` input/output buffer methods"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd"]
+      - id: T-006
+        description: "Refactor `Client` buffer logic"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
+      - id: T-007
+        description: "Write unit tests for `ClientManager` (add, remove, find by fd/nick, list)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd"]
+      - id: T-008
+        description: "Implement `ClientManager` registry (map fd → Client*)"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd"]
+      - id: T-009
+        description: "Refactor `ClientManager` ownership semantics"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
+      - id: T-010
+        description: "Write unit tests for `NickManager` (reserve, release, isAvailable, isValid)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd"]
+      - id: T-011
+        description: "Implement `NickManager` registry (set of nicks)"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd"]
+      - id: T-012
+        description: "Refactor `NickManager` validation logic"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
+      - id: T-013
+        description: "Write unit tests for `IRCService` lifecycle (onClientConnected/onClientData/onClientDisconnected/tick)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd", "irc_network_layer_pull.mmd"]
+      - id: T-014
+        description: "Implement `IRCService` orchestrator (password, dirtyClients sets, tick method)"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd", "irc_network_layer_pull.mmd"]
+      - id: T-015
+        description: "Refactor `IRCService` orchestration logic"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-002
+    name: Network Layer & Socket I/O
+    short_description: SocketService interface, TickResult, SocketServer, poll() event loop, non-blocking I/O
+    detailed_description: "Derived from `irc_network_layer_pull.mmd` (`SocketService` interface, `TickResult` struct, `SocketServer` network class). Implements the subject's networking requirements: `poll()`, non-blocking I/O, no forking, TCP/IP."
+    related_elements: ["irc_network_layer_pull.mmd"]
+    depends_on: [FEAT-001]
+    dependency_rationale: "`IRCService` implements `SocketService`"
+    acceptance_criteria:
+      - id: AC-007
+        description: "`TickResult` unit tests pass"
+      - id: AC-008
+        description: "`SocketService` interface compiles as pure abstract class"
+      - id: AC-009
+        description: "`SocketServer` `run()`/`stop()` lifecycle works without crashing"
+      - id: AC-010
+        description: "`poll()` loop handles events without blocking indefinitely"
+      - id: AC-011
+        description: "`IRCService` satisfies the `SocketService` interface contract"
+      - id: AC-012
+        description: "New client connections are accepted and registered"
+      - id: AC-013
+        description: "`IRCService::tick` returns a populated `TickResult`"
+    tasks:
+      - id: T-016
+        description: "Write unit tests for `TickResult` struct fields and default values"
+        tdd_step: Red
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-017
+        description: "Implement `TickResult` struct"
+        tdd_step: Green
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-018
+        description: "Refactor `TickResult` for copy semantics"
+        tdd_step: Refactor
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-019
+        description: "Write unit tests for `SocketService` interface contract (pure virtual methods)"
+        tdd_step: Red
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-020
+        description: "Implement `SocketService` pure abstract interface"
+        tdd_step: Green
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-021
+        description: "Refactor `SocketService` interface"
+        tdd_step: Refactor
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-022
+        description: "Write integration tests for `SocketServer` listen/accept lifecycle"
+        tdd_step: Red
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-023
+        description: "Implement `SocketServer` class (port, listenFd, running, pollFds, pendingOutput, closingFds)"
+        tdd_step: Green
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-024
+        description: "Refactor `SocketServer` socket setup (`socket`, `bind`, `listen`, `setsockopt`, `fcntl` non-blocking)"
+        tdd_step: Refactor
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-025
+        description: "Write integration tests for single `poll()` event loop handling listen/read/write"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-026
+        description: "Implement event loop with single `poll()` call"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-027
+        description: "Refactor event loop to avoid blocking and `errno` checks"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-028
+        description: "Write integration tests for client connect/disconnect via `accept`/`close`"
+        tdd_step: Red
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-029
+        description: "Implement `accept` for new connections and fd registration in `pollFds`"
+        tdd_step: Green
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-030
+        description: "Refactor connection/disconnection cleanup"
+        tdd_step: Refactor
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-031
+        description: "Write unit tests for `IRCService` implementing `SocketService::tick`"
+        tdd_step: Red
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-032
+        description: "Wire `IRCService` to implement `SocketService` interface"
+        tdd_step: Green
+        related_elements: ["irc_network_layer_pull.mmd"]
+      - id: T-033
+        description: "Refactor `IRCService::tick` to return populated `TickResult`"
+        tdd_step: Refactor
+        related_elements: ["irc_network_layer_pull.mmd"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-003
+    name: Command Infrastructure
+    short_description: IRCParser, IRCMessage, CommandDispatcher, CommandHandler chain, CommandFactory, CommandContext, ReplyFormatter
+    detailed_description: "Derived from `irc_commands.mmd` (`IRCParser`, `IRCMessage`, `CommandDispatcher`, `CommandHandler` chain, `CommandFactory`, `Command` interface, `CommandContext`, `ReplyFormatter`)."
+    related_elements: ["irc_commands.mmd"]
+    depends_on: [FEAT-001, FEAT-002]
+    dependency_rationale: uses managers + event loop
+    acceptance_criteria:
+      - id: AC-014
+        description: "`IRCMessage` unit tests pass"
+      - id: AC-015
+        description: "`IRCParser` unit tests pass"
+      - id: AC-016
+        description: "`CommandFactory` unit tests pass"
+      - id: AC-017
+        description: "`Command` interface compiles as abstract"
+      - id: AC-018
+        description: "`CommandHandler` chain unit tests pass"
+      - id: AC-019
+        description: "Chain handler unit tests pass"
+      - id: AC-020
+        description: "`CommandDispatcher` integration tests pass"
+      - id: AC-021
+        description: "`CommandContext` unit tests pass"
+      - id: AC-022
+        description: "`ReplyFormatter` unit tests pass"
+    tasks:
+      - id: T-034
+        description: "Write unit tests for `IRCMessage` parsing fields"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-035
+        description: "Implement `IRCMessage` data class"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-036
+        description: "Refactor `IRCMessage` field accessors"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-037
+        description: "Write unit tests for `IRCParser` (valid and malformed lines)"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-038
+        description: "Implement `IRCParser` utility (`parseLine`, `extractPrefix`, `extractCommand`, `extractParams`)"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-039
+        description: "Refactor `IRCParser` for partial-line handling"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-040
+        description: "Write unit tests for `CommandFactory` (register/create by name)"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-041
+        description: "Implement `CommandFactory`"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-042
+        description: "Refactor `CommandFactory` registration map"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-043
+        description: "Write unit tests for `Command` interface (pure virtual methods)"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-044
+        description: "Implement `Command` abstract interface"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-045
+        description: "Refactor `Command` interface"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-046
+        description: "Write unit tests for `CommandHandler` chain propagation"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-047
+        description: "Implement `CommandHandler` chain interface"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-048
+        description: "Refactor `CommandHandler` chain links"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-049
+        description: "Write unit tests for chain handlers (`RegistrationCheckHandler`, `ParamCheckHandler`, `ExecutionHandler`)"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-050
+        description: "Implement chain handlers"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-051
+        description: "Refactor handler logic for registration/param/execution separation"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-052
+        description: "Write integration tests for `CommandDispatcher` dispatch flow"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-053
+        description: "Implement `CommandDispatcher` (chain ownership, `dispatchNext`, context creation)"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-054
+        description: "Refactor `CommandDispatcher` parser/factory integration"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-055
+        description: "Write unit tests for `CommandContext` (`send`/`disconnect` helpers)"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-056
+        description: "Implement `CommandContext`"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-057
+        description: "Refactor `CommandContext` output appending"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+      - id: T-058
+        description: "Write unit tests for `ReplyFormatter` reply strings"
+        tdd_step: Red
+        related_elements: ["irc_commands.mmd"]
+      - id: T-059
+        description: "Implement `ReplyFormatter`"
+        tdd_step: Green
+        related_elements: ["irc_commands.mmd"]
+      - id: T-060
+        description: "Refactor `ReplyFormatter` formatting logic"
+        tdd_step: Refactor
+        related_elements: ["irc_commands.mmd"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-004
+    name: Registration & Authentication
+    short_description: PASS, NICK, USER commands, RegistrationCheckHandler, authenticated/registered state on Client
+    detailed_description: "Derived from `irc_registration.mmd`. Implements registration commands `PASS`, `NICK`, `USER`, the `RegistrationCheckHandler` in the command chain, and the `authenticated`/`registered` state on `Client`."
+    related_elements: ["irc_registration.mmd"]
+    depends_on: [FEAT-001, FEAT-003]
+    dependency_rationale: "uses `Client`, command chain"
+    acceptance_criteria:
+      - id: AC-023
+        description: "Clients must authenticate with `PASS` before any other command is accepted"
+      - id: AC-024
+        description: "Clients can set a unique nickname via `NICK`"
+      - id: AC-025
+        description: "Clients can set username/realname via `USER`"
+      - id: AC-026
+        description: "A client is `registered` only after `PASS` + `NICK` + `USER` are complete"
+      - id: AC-027
+        description: "Unregistered clients are blocked from non-registration commands"
+      - id: AC-028
+        description: "Registration flow integration tests pass for `PASS`/`NICK`/`USER` sequences"
+    tasks:
+      - id: T-061
+        description: "Write unit tests for `PASS` command"
+        tdd_step: Red
+        related_elements: ["irc_registration.mmd"]
+      - id: T-062
+        description: "Implement `PASS` command"
+        tdd_step: Green
+        related_elements: ["irc_registration.mmd"]
+      - id: T-063
+        description: "Refactor `PASS` authentication check"
+        tdd_step: Refactor
+        related_elements: ["irc_registration.mmd"]
+      - id: T-064
+        description: "Write unit tests for `NICK` command"
+        tdd_step: Red
+        related_elements: ["irc_registration.mmd"]
+      - id: T-065
+        description: "Implement `NICK` command"
+        tdd_step: Green
+        related_elements: ["irc_registration.mmd"]
+      - id: T-066
+        description: "Refactor `NICK` nickname collision check"
+        tdd_step: Refactor
+        related_elements: ["irc_registration.mmd"]
+      - id: T-067
+        description: "Write unit tests for `USER` command"
+        tdd_step: Red
+        related_elements: ["irc_registration.mmd"]
+      - id: T-068
+        description: "Implement `USER` command"
+        tdd_step: Green
+        related_elements: ["irc_registration.mmd"]
+      - id: T-069
+        description: "Refactor `USER` username/realname parsing"
+        tdd_step: Refactor
+        related_elements: ["irc_registration.mmd"]
+      - id: T-070
+        description: "Write unit tests for `RegistrationCheckHandler`"
+        tdd_step: Red
+        related_elements: ["irc_registration.mmd"]
+      - id: T-071
+        description: "Implement `RegistrationCheckHandler` in command chain"
+        tdd_step: Green
+        related_elements: ["irc_registration.mmd"]
+      - id: T-072
+        description: "Refactor registration flow state machine"
+        tdd_step: Refactor
+        related_elements: ["irc_registration.mmd"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-005
+    name: Channel Management
+    short_description: ChannelManager registry, Channel entity, JOIN/PART, channel message broadcasting
+    detailed_description: "Derived from `irc_channels.mmd` (`ChannelManager` registry, `Channel` entity). Implements subject requirements: `JOIN`, `PART`, operators and regular users, channel message forwarding."
+    related_elements: ["irc_channels.mmd"]
+    depends_on: [FEAT-001, FEAT-003, FEAT-004]
+    dependency_rationale: "uses `Client`, `NickManager`, command dispatching"
+    acceptance_criteria:
+      - id: AC-029
+        description: "Clients can join and leave channels"
+      - id: AC-030
+        description: "Channel operators and regular users exist"
+      - id: AC-031
+        description: "Messages sent to a channel are forwarded to every other client in that channel"
+      - id: AC-032
+        description: "Invalid channel names are rejected"
+      - id: AC-033
+        description: "`ChannelManager` unit tests pass"
+      - id: AC-034
+        description: "`Channel` unit tests pass"
+      - id: AC-035
+        description: "`JOIN` command integration tests pass"
+      - id: AC-036
+        description: "`PART` command integration tests pass"
+      - id: AC-037
+        description: "Channel message forwarding integration tests pass"
+    tasks:
+      - id: T-073
+        description: "Write unit tests for `ChannelManager` (create/find/destroy/list)"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-074
+        description: "Implement `ChannelManager` registry (map name → Channel*)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-075
+        description: "Refactor `ChannelManager` channel lifecycle"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-076
+        description: "Write unit tests for `Channel` member/operator management"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-077
+        description: "Implement `Channel` class (name, topic, creator, members/operators/invited sets)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-078
+        description: "Refactor `Channel` membership logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-079
+        description: "Write integration tests for `JOIN` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-080
+        description: "Implement `JOIN` command (create channel if needed, forward join)"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-081
+        description: "Refactor `JOIN` notification broadcasting"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-082
+        description: "Write integration tests for `PART` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-083
+        description: "Implement `PART` command (leave channel, destroy if empty)"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-084
+        description: "Refactor `PART` cleanup logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-085
+        description: "Write integration tests for channel message broadcasting"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-086
+        description: "Implement channel message forwarding to all members"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-087
+        description: "Refactor message recipient calculation"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-006
+    name: Channel Modes & Operator Commands
+    short_description: ChannelMode strategies (i, t, k, o, l), KICK, INVITE, TOPIC, MODE commands
+    detailed_description: "Derived from `irc_channels.mmd` (`ChannelMode` interface and strategies: `InviteOnlyMode`, `TopicRestrictedMode`, `KeyMode`, `OperatorMode`, `LimitMode`). Implements subject `MODE` sub-flags (`i`, `t`, `k`, `o`, `l`) and operator commands `KICK`, `INVITE`, `TOPIC`, `MODE`."
+    related_elements: ["irc_channels.mmd"]
+    depends_on: [FEAT-005]
+    dependency_rationale: "uses `Channel`"
+    acceptance_criteria:
+      - id: AC-038
+        description: "Channel modes can be applied and checked per strategy"
+      - id: AC-039
+        description: "Invite-only mode restricts joining to invited clients only"
+      - id: AC-040
+        description: "Key mode requires a correct key to join"
+      - id: AC-041
+        description: "Limit mode restricts maximum member count"
+      - id: AC-042
+        description: "Operator commands `KICK`, `INVITE`, `TOPIC`, `MODE` work correctly"
+    tasks:
+      - id: T-088
+        description: "Write unit tests for `ChannelMode` interface (pure virtual)"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-089
+        description: "Implement `ChannelMode` abstract interface"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-090
+        description: "Refactor `ChannelMode` interface"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-091
+        description: "Write unit tests for `InviteOnlyMode` strategy"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-092
+        description: "Implement `InviteOnlyMode` (`i` flag)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-093
+        description: "Refactor `InviteOnlyMode` apply/check logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-094
+        description: "Write unit tests for `TopicRestrictedMode` strategy"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-095
+        description: "Implement `TopicRestrictedMode` (`t` flag)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-096
+        description: "Refactor `TopicRestrictedMode` apply/check logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-097
+        description: "Write unit tests for `KeyMode` strategy"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-098
+        description: "Implement `KeyMode` (`k` flag)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-099
+        description: "Refactor `KeyMode` apply/check logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-100
+        description: "Write unit tests for `OperatorMode` strategy"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-101
+        description: "Implement `OperatorMode` (`o` flag)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-102
+        description: "Refactor `OperatorMode` apply/check logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-103
+        description: "Write unit tests for `LimitMode` strategy"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-104
+        description: "Implement `LimitMode` (`l` flag)"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-105
+        description: "Refactor `LimitMode` apply/check logic"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-106
+        description: "Write integration tests for `Channel` applying mode strategies"
+        tdd_step: Red
+        related_elements: ["irc_channels.mmd"]
+      - id: T-107
+        description: "Integrate `ChannelMode` strategies into `Channel::modeStrategies`"
+        tdd_step: Green
+        related_elements: ["irc_channels.mmd"]
+      - id: T-108
+        description: "Refactor `Channel` mode application loop"
+        tdd_step: Refactor
+        related_elements: ["irc_channels.mmd"]
+      - id: T-109
+        description: "Write unit tests for `KICK` command (operator only)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-110
+        description: "Implement `KICK` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-111
+        description: "Refactor `KICK` operator permission checks"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-112
+        description: "Write unit tests for `INVITE` command (operator only)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-113
+        description: "Implement `INVITE` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-114
+        description: "Refactor `INVITE` invited-set logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-115
+        description: "Write unit tests for `TOPIC` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-116
+        description: "Implement `TOPIC` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-117
+        description: "Refactor `TOPIC` setter/getter logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-118
+        description: "Write unit tests for `MODE` command (all sub-flags)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-119
+        description: "Implement `MODE` command (`i`, `t`, `k`, `o`, `l`)"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-120
+        description: "Refactor `MODE` flag parsing and application"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-007
+    name: Private Messages & System Commands
+    short_description: PRIVMSG, NOTICE, QUIT, PING, CAP commands
+    detailed_description: "Implements subject requirement: send and receive private messages using `PRIVMSG` / `NOTICE` between clients. Also implements system commands `QUIT`, `PING`/`PONG`, and `CAP`."
+    related_elements: ["irc_commands.mmd"]
+    depends_on: [FEAT-003, FEAT-005]
+    dependency_rationale: uses command dispatching + channels
+    acceptance_criteria:
+      - id: AC-043
+        description: "Clients can send private messages to other clients by nickname"
+      - id: AC-044
+        description: "`NOTICE` messages are delivered without requiring registration replies"
+      - id: AC-045
+        description: "`QUIT` command cleanly disconnects a client"
+      - id: AC-046
+        description: "`PING`/`PONG` handling keeps connections alive"
+      - id: AC-047
+        description: "`CAP` command negotiation works correctly"
+    tasks:
+      - id: T-121
+        description: "Write unit tests for `PRIVMSG` command (delivery by nickname)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-122
+        description: "Implement `PRIVMSG` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-123
+        description: "Refactor `PRIVMSG` target lookup"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-124
+        description: "Write unit tests for `NOTICE` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-125
+        description: "Implement `NOTICE` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-126
+        description: "Refactor `NOTICE` delivery logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-127
+        description: "Write unit tests for `QUIT` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-128
+        description: "Implement `QUIT` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-129
+        description: "Refactor `QUIT` cleanup logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-130
+        description: "Write unit tests for `PING`/`PONG` handling"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-131
+        description: "Implement `PING`/`PONG` handling"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-132
+        description: "Refactor `PING`/`PONG` timeout logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-133
+        description: "Write unit tests for `CAP` command"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-134
+        description: "Implement `CAP` command"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-135
+        description: "Refactor `CAP` negotiation logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-008
+    name: Robustness & Edge Cases
+    short_description: Input buffer aggregation, graceful disconnection, signal handling, no crashes
+    detailed_description: "Implements subject robustness requirements: no crashes, partial data handling, non-blocking I/O without `errno` reliance, clean shutdown, graceful disconnection."
+    related_elements: ["irc_robustness.mmd"]
+    depends_on: [FEAT-001, FEAT-002, FEAT-005, FEAT-007]
+    dependency_rationale: "uses clients, sockets, channels, system commands"
+    acceptance_criteria:
+      - id: AC-048
+        description: "Server does not crash when receiving partial data"
+      - id: AC-049
+        description: "Server does not crash on client disconnection at any moment"
+      - id: AC-050
+        description: "Server shuts down cleanly on signals without leaving fds open"
+      - id: AC-051
+        description: "Input buffer reassembles split commands correctly"
+      - id: AC-052
+        description: "Client disconnection cleans up all associated state"
+      - id: AC-053
+        description: "Signal handlers stop the event loop and close sockets"
+    tasks:
+      - id: T-136
+        description: "Write integration tests for partial data aggregation (split across multiple `recv`)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-137
+        description: "Implement input buffer aggregation until complete line (`\\n`)"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-138
+        description: "Refactor buffer reassembly logic"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-139
+        description: "Write integration tests for graceful client disconnection at any moment"
+        tdd_step: Red
+        related_elements: ["irc_robustness.mmd"]
+      - id: T-140
+        description: "Implement graceful disconnection (`close` fd, remove from `pollFds`, clean up channels/nicks)"
+        tdd_step: Green
+        related_elements: ["irc_robustness.mmd"]
+      - id: T-141
+        description: "Refactor disconnection cleanup"
+        tdd_step: Refactor
+        related_elements: ["irc_robustness.mmd"]
+      - id: T-142
+        description: "Write integration tests for clean shutdown on `SIGINT`/`SIGTERM`"
+        tdd_step: Red
+        related_elements: ["irc_robustness.mmd"]
+      - id: T-143
+        description: "Implement signal handling (`SIGINT`, `SIGTERM`, `SIGPIPE`) for clean shutdown"
+        tdd_step: Green
+        related_elements: ["irc_robustness.mmd"]
+      - id: T-144
+        description: "Refactor signal handler to stop event loop and close sockets"
+        tdd_step: Refactor
+        related_elements: ["irc_robustness.mmd"]
+
+  # ---------------------------------------------------------------------------
+  - id: FEAT-009
+    name: Build System & Project Skeleton
+    short_description: Makefile rules, C++98 flags, executable name `ircserv`, argument parsing
+    detailed_description: "Establishes the compilable foundation required by the subject: Makefile rules, C++98 standard, warning flags, executable name, and command-line arguments."
+    related_elements: ["Subject Chapter IV"]
+    depends_on: [FEAT-001, FEAT-002, FEAT-003, FEAT-004, FEAT-005, FEAT-006, FEAT-007, FEAT-008]
+    depends_on_label: All above
+    dependency_rationale: builds the complete project
+    acceptance_criteria:
+      - id: AC-054
+        description: "`make all` / `make` builds the `ircserv` executable without errors"
+      - id: AC-055
+        description: "`make clean` removes object files; `make fclean` removes the binary; `make re` rebuilds from scratch"
+      - id: AC-056
+        description: "`./ircserv` with wrong arguments exits with a usage message"
+      - id: AC-057
+        description: "Compilation succeeds with `-std=c++98 -Wall -Wextra -Werror` and zero warnings"
+      - id: AC-058
+        description: "Build verification script passes"
+      - id: AC-059
+        description: "`Makefile` contains all required targets"
+      - id: AC-060
+        description: "Entry point reads `port` and `password` from `argv`"
+      - id: AC-061
+        description: "Directory structure exists"
+    tasks:
+      - id: T-145
+        description: "Write build verification script (compile all sources with `-Wall -Wextra -Werror -std=c++98`)"
+        tdd_step: Red
+        related_elements: ["Subject Chapter IV"]
+      - id: T-146
+        description: "Create `Makefile` with `NAME = ircserv` and rules `all`, `clean`, `fclean`, `re`, `$(NAME)`"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-147
+        description: "Refactor `Makefile` to avoid unnecessary relinking"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-148
+        description: "Create entry point that parses `./ircserv <port> <password>` and validates arguments"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]
+      - id: T-149
+        description: "Refactor argument validation and usage message"
+        tdd_step: Refactor
+        related_elements: ["Subject Chapter IV"]
+      - id: T-150
+        description: "Organize directory structure (`include/`, `src/`, `tests/`, `docs/`)"
+        tdd_step: Green
+        related_elements: ["Subject Chapter IV"]

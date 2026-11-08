@@ -1,0 +1,65 @@
+name: "Hotfix / Critical Bug"
+description: "Report a bug requiring a hotfix (hotfix/ branch)"
+title: "[HOTFIX] <hotfix title>"
+labels: ["hotfix", "bug", "urgent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Hotfix Template
+
+        A **hotfix** is a one-off fix implemented on a `hotfix/` branch.
+        It has a **traceability ID** (e.g. `HOTFIX-001`) and **acceptance criteria**
+        to validate the bug is resolved.
+
+  - type: input
+    id: hotfix-id
+    attributes:
+      label: "Hotfix traceability ID"
+      description: "Example: HOTFIX-001."
+      placeholder: "HOTFIX-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug description"
+      placeholder: "What fails, in which version, and how to reproduce it?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: "Impact and urgency"
+      placeholder: "Which users or functionality are affected?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria"
+      description: |
+        Criteria that must be met to consider the hotfix resolved.
+        Example:
+        - AC-010: The affected flow works again.
+        - AC-011: No regressions in `make test`.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: "Severity"
+      options:
+        - "Critical"
+        - "High"
+        - "Medium"
+        - "Low"
+    validations:
+      required: true
