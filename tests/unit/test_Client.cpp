@@ -149,7 +149,7 @@ TEST(Client, PushInputWithStringAppendsData_AC_002) {
     Client client(5);
     std::string line;
 
-    client.pushInput(std::string("hello\n"));
+    client.pushInput(std::string("hello\r\n"));
 
     CHECK_TRUE(client.getNextInputLine(line));
     STRCMP_EQUAL("hello", line.c_str());
@@ -162,6 +162,7 @@ TEST(Client, PushInputWithCharAppendsData_AC_002) {
 
     client.pushInput('h');
     client.pushInput('i');
+    client.pushInput('\r');
     client.pushInput('\n');
 
     CHECK_TRUE(client.getNextInputLine(line));
@@ -172,7 +173,7 @@ TEST(Client, PushInputWithCStringAppendsData_AC_002) {
     Client client(5);
     std::string line;
 
-    client.pushInput("hello\n");
+    client.pushInput("hello\r\n");
 
     CHECK_TRUE(client.getNextInputLine(line));
     STRCMP_EQUAL("hello", line.c_str());
@@ -183,7 +184,7 @@ TEST(Client, PushInputAppendsDataToExistingBuffer_AC_002) {
     std::string line;
 
     client.pushInput("hel");
-    client.pushInput("lo\n");
+    client.pushInput("lo\r\n");
 
     CHECK_TRUE(client.getNextInputLine(line));
     STRCMP_EQUAL("hello", line.c_str());
@@ -293,6 +294,75 @@ TEST(Client, GetNextInputLineHandlesEmptyLine_AC_002) {
 
     CHECK_TRUE(client.getNextInputLine(line));
     STRCMP_EQUAL("", line.c_str());
+    CHECK_TRUE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLineDoesNotSplitOnNewlineAlone_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("hello\nworld");
+
+    CHECK_FALSE(client.getNextInputLine(line));
+    CHECK_FALSE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLineDoesNotSplitOnCarriageReturnAlone_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("hello\rworld");
+
+    CHECK_FALSE(client.getNextInputLine(line));
+    CHECK_FALSE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLinePreservesNewlineInsideIncompleteLine_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("hello\nworld\r\n");
+
+    CHECK_TRUE(client.getNextInputLine(line));
+    STRCMP_EQUAL("hello\nworld", line.c_str());
+    CHECK_TRUE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLinePreservesCarriageReturnInsideIncompleteLine_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("hello\rworld\r\n");
+
+    CHECK_TRUE(client.getNextInputLine(line));
+    STRCMP_EQUAL("hello\rworld", line.c_str());
+    CHECK_TRUE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLinePreservesNewlineAndCarriageReturnInsideLine_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("hel\nlo\rworld\r\n");
+
+    CHECK_TRUE(client.getNextInputLine(line));
+    STRCMP_EQUAL("hel\nlo\rworld", line.c_str());
+    CHECK_TRUE(client.isInputBufferEmpty());
+}
+
+TEST(Client, GetNextInputLineExtractsMultipleLinesWithStandaloneCarriageReturnsAndNewlines_AC_002) {
+    Client client(5);
+    std::string line;
+
+    client.pushInput("first\nline\rcontent\r\nsecond\rline\ncontent\r\n");
+
+    CHECK_TRUE(client.getNextInputLine(line));
+    STRCMP_EQUAL("first\nline\rcontent", line.c_str());
+
+    CHECK_TRUE(client.getNextInputLine(line));
+    STRCMP_EQUAL("second\rline\ncontent", line.c_str());
+
+    CHECK_FALSE(client.getNextInputLine(line));
     CHECK_TRUE(client.isInputBufferEmpty());
 }
 
