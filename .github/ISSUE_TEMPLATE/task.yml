@@ -1,0 +1,63 @@
+name: "New Task (sub-issue of feature)"
+description: "Create a task that is a sub-issue of an existing feature"
+title: "[TASK] <task title>"
+labels: ["task", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Task Template
+
+        A **task** is a smaller unit of work belonging to a **parent feature**.
+        It is a sub-issue of the feature and must have its own **traceability ID**
+        (e.g. `T-001`) and **acceptance criteria** (e.g. `AC-003`).
+        It is implemented on the same `feature/<name>` branch as the parent feature.
+
+  - type: input
+    id: task-id
+    attributes:
+      label: "Task traceability ID"
+      description: "Example: T-001."
+      placeholder: "T-001"
+    validations:
+      required: true
+
+  - type: input
+    id: parent-feature
+    attributes:
+      label: "Parent feature (ID)"
+      description: "ID of the feature this task depends on, e.g. FEAT-001."
+      placeholder: "FEAT-001"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Task description"
+      placeholder: "What will be done in this task?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: "Acceptance criteria"
+      description: |
+        List this task's acceptance criteria, one per line, each with its own traceability ID.
+        Example:
+        - AC-003: Counter class compiles without warnings.
+        - AC-004: `make test-unit` passes.
+      placeholder: |
+        - AC-001: ...
+        - AC-002: ...
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: ready
+    attributes:
+      label: "Confirmation"
+      options:
+        - label: "The parent feature exists and has an ID assigned."
+          required: true

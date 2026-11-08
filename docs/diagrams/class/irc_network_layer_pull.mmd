@@ -1,0 +1,49 @@
+classDiagram
+    class SocketService {
+        <<interface>>
+        + ~SocketService()
+        + onClientConnected(int fd)* void
+        + onClientData(int fd, const std::string& data)* void
+        + onClientDisconnected(int fd)* void
+        + tick()* TickResult
+    }
+
+    class TickResult {
+        <<struct>>
+        + std::vector~std::pair~int, std::string~~ outputs
+        + std::vector~int~ toClose
+        + bool morePending
+    }
+
+    class SocketServer {
+        <<network>>
+        - int port
+        - int listenFd
+        - bool running
+        - std::vector~pollfd~ pollFds
+        - std::map~int, std::string~ pendingOutput
+        - std::set~int~ closingFds
+        - SocketService* service
+        + SocketServer(int port, SocketService* service)
+        + ~SocketServer()
+        + void run()
+        + void stop()
+    }
+
+    class IRCService {
+        <<orchestrator>>
+        - std::string password
+        - std::set~int~ dirtyClients
+        + IRCService(const std::string& password)
+        + ~IRCService()
+        + void onClientConnected(int fd)
+        + void onClientData(int fd, const std::string& data)
+        + void onClientDisconnected(int fd)
+        + TickResult tick()
+    }
+
+    SocketService <|.. IRCService : implements
+    SocketServer --> SocketService : consumes (callbacks + tick)
+    SocketService ..> TickResult : returns
+    SocketServer ..> TickResult : reads
+    IRCService ..> TickResult : builds

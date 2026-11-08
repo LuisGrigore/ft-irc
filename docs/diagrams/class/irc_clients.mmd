@@ -1,0 +1,73 @@
+classDiagram
+    class IRCService {
+        <<orchestrator>>
+        - std::string password
+        - std::set~int~ dirtyClients
+        - std::set~int~ outputDirty
+        - std::set~int~ closeRequests
+        - ClientManager* clientManager
+        - NickManager* nickManager
+        + void onClientConnected(int fd)
+        + void onClientData(int fd, const std::string& data)
+        + void onClientDisconnected(int fd)
+        + TickResult tick()
+    }
+
+    class Client {
+        <<entity>>
+        - int fd
+        - std::string nick
+        - std::string username
+        - std::string realname
+        - std::string hostname
+        - std::string inputBuffer
+        - std::string outputBuffer
+        - bool authenticated
+        - bool registered
+        - bool closing
+        + Client(int fd)
+        + int getFd() const
+        + const std::string& getNick() const
+        + void setNick(const std::string& nick)
+        + const std::string& getUsername() const
+        + void setUsername(const std::string& username)
+        + void appendInput(const char* data, size_t len)
+        + bool popLine(std::string& line)
+        + void appendOutput(const std::string& data)
+        + std::string takeOutput()
+        + bool isAuthenticated() const
+        + void setAuthenticated(bool value)
+        + bool isRegistered() const
+        + void setRegistered(bool value)
+        + bool isClosing() const
+        + void setClosing(bool value)
+        + std::string prefix() const
+    }
+
+    class ClientManager {
+        <<registry>>
+        - std::map~int, Client*~ clients
+        + Client* findClient(int fd)
+        + Client* findClientByNick(const std::string& nick)
+        + void addClient(Client* client)
+        + void removeClient(int fd)
+        + std::vector~Client*~ listClients() const
+    }
+
+    class NickManager {
+        <<registry>>
+        - std::set~std::string~ nicks
+        + bool isAvailable(const std::string& nick) const
+        + bool reserve(const std::string& nick)
+        + void release(const std::string& nick)
+        + bool isValid(const std::string& nick) const
+    }
+
+    class ChannelManager {
+        <<registry>>
+    }
+
+    IRCService *-- ClientManager : owns
+    IRCService *-- NickManager : owns
+    ClientManager --> Client : map of clients
+    IRCService ..> Client : appendInput / popLine / takeOutput

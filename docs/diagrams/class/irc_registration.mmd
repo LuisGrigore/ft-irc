@@ -1,0 +1,82 @@
+classDiagram
+    class IRCService {
+        <<orchestrator>>
+        - std::string password
+        - std::set~int~ dirtyClients
+        - std::set~int~ outputDirty
+        - std::set~int~ closeRequests
+        - ClientManager* clientManager
+        - NickManager* nickManager
+        - CommandDispatcher* dispatcher
+        + void onClientConnected(int fd)
+        + void onClientData(int fd, const std::string& data)
+        + void onClientDisconnected(int fd)
+        + TickResult tick()
+    }
+
+    class Client {
+        <<entity>>
+        - int fd
+        - std::string nick
+        - std::string username
+        - std::string realname
+        - std::string hostname
+        - std::string inputBuffer
+        - std::string outputBuffer
+        - bool authenticated
+        - bool registered
+        - bool closing
+        + bool isAuthenticated() const
+        + void setAuthenticated(bool value)
+        + bool isRegistered() const
+        + void setRegistered(bool value)
+        + std::string prefix() const
+    }
+
+    class CommandDispatcher {
+        <<dispatcher>>
+        - CommandContext* context
+        - CommandHandler* head
+        + bool dispatchNext(Client& client)
+    }
+
+    class CommandHandler {
+        <<interface>>
+        + ~CommandHandler()
+        + handle(CommandContext& ctx, Client& client, const IRCMessage& msg)* bool
+        + void setNext(CommandHandler* next)
+    }
+
+    class RegistrationCheckHandler {
+        <<chain>>
+        + bool handle(...)
+    }
+
+    class CommandContext {
+        <<context>>
+        + ClientManager& clients
+        + NickManager& nicks
+        + const std::string& password
+        + const std::string& serverName
+        - std::set~int~& outputDirty
+        - std::set~int~& closeRequests
+        + void send(Client& to, const std::string& msg)
+        + void disconnect(Client& client, const std::string& reason)
+    }
+
+    class IRCMessage {
+        <<data>>
+        + std::string prefix
+        + std::string command
+        + std::vector~std::string~ params
+        + std::string trailing
+        + std::string rawLine
+    }
+
+    IRCService *-- CommandDispatcher : owns
+    CommandDispatcher *-- CommandContext : owns
+    CommandDispatcher o-- CommandHandler : chain head
+    CommandHandler <|.. RegistrationCheckHandler
+    CommandDispatcher --> IRCMessage : consumes
+    IRCService ..> Client : authenticated / registered state
+    CommandContext ..> Client : checks registration

@@ -1,0 +1,59 @@
+classDiagram
+    class IRCService {
+        <<orchestrator>>
+        - std::string password
+        - std::set~int~ dirtyClients
+        - std::set~int~ outputDirty
+        - std::set~int~ closeRequests
+        - ClientManager* clientManager
+        - NickManager* nickManager
+        - ChannelManager* channelManager
+        + void onClientConnected(int fd)
+        + void onClientData(int fd, const std::string& data)
+        + void onClientDisconnected(int fd)
+        + TickResult tick()
+    }
+
+    class Client {
+        <<entity>>
+        - int fd
+        - bool closing
+        + bool isClosing() const
+        + void setClosing(bool value)
+    }
+
+    class ClientManager {
+        <<registry>>
+        - std::map~int, Client*~ clients
+        + Client* findClient(int fd)
+        + void removeClient(int fd)
+    }
+
+    class NickManager {
+        <<registry>>
+        - std::set~std::string~ nicks
+        + void release(const std::string& nick)
+    }
+
+    class ChannelManager {
+        <<registry>>
+        - std::map~std::string, Channel*~ channels
+        + void removeClientFromAll(Client* client)
+    }
+
+    class Channel {
+        <<entity>>
+        - std::string name
+        - std::set~Client*~ members
+        - std::set~Client*~ operators
+    }
+
+    IRCService *-- ClientManager : owns
+    IRCService *-- NickManager : owns
+    IRCService *-- ChannelManager : owns
+    ClientManager --> Client : map of clients
+    ChannelManager --> Channel : map of channels
+    Channel --> Client : members / operators
+
+    note "Graceful disconnection flow:" as N1
+    note N1: onClientDisconnected(fd) →\nClientManager.removeClient(fd) →\nNickManager.release(nick) →\nChannelManager.removeClientFromAll(client)

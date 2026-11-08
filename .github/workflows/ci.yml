@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-tests:
+    name: Build and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake g++ make valgrind
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Compile project
+        run: cmake --build build
+
+      - name: Run unit tests
+        run: ctest --test-dir build -L unit --output-on-failure
+
+      - name: Run integration tests
+        run: ctest --test-dir build -L integration --output-on-failure
+
+  memory-checks:
+    name: Memory checks (Valgrind)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake g++ make valgrind
+
+      - name: Compile project in Debug mode
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build
+
+      - name: Run tests with Valgrind
+        run: |
+          valgrind \
+            --leak-check=full \
+            --show-leak-kinds=all \
+            --errors-for-leak-kinds=definite,indirect \
+            --error-exitcode=1 \
+            build/tests/unit_tests
+          valgrind \
+            --leak-check=full \
+            --show-leak-kinds=all \
+            --errors-for-leak-kinds=definite,indirect \
+            --error-exitcode=1 \
+            build/tests/integration_tests
+
+  sanitizers:
+    name: Sanitizers (ASan + UBSan)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake g++ make
+
+      - name: Configure with sanitizers enabled
+        run: cmake -S . -B build-asan -DCMAKE_BUILD_TYPE=Debug -DENABLE_SANITIZERS=ON
+
+      - name: Compile project
+        run: cmake --build build-asan
+
+      - name: Run all tests
+        run: ctest --test-dir build-asan --output-on-failure

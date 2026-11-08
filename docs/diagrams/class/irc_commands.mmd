@@ -1,0 +1,148 @@
+classDiagram
+    class IRCService {
+        <<orchestrator>>
+        - std::string password
+        - std::set~int~ outputDirty
+        - std::set~int~ closeRequests
+        - ClientManager* clientManager
+        - ChannelManager* channelManager
+        - NickManager* nickManager
+        - CommandDispatcher* dispatcher
+        + TickResult tick()
+    }
+
+    class CommandDispatcher {
+        <<dispatcher>>
+        - CommandContext* context
+        - CommandHandler* head
+        + CommandDispatcher(ClientManager& clients, ChannelManager& channels, NickManager& nicks, const std::string& password, const std::string& serverName, std::set~int~& outputDirty, std::set~int~& closeRequests)
+        + ~CommandDispatcher()
+        + void setHandlerChain(CommandHandler* head)
+        + bool dispatchNext(Client& client)
+    }
+
+    class IRCParser {
+        <<utility>>
+        + parseLine$(const std::string& line, IRCMessage& msg) bool
+        + extractPrefix$(const std::string& line) std::string
+        + extractCommand$(const std::string& line) std::string
+        + extractParams$(const std::string& line, std::vector~std::string~& params, std::string& trailing) void
+    }
+
+    class IRCMessage {
+        <<data>>
+        + std::string prefix
+        + std::string command
+        + std::vector~std::string~ params
+        + std::string trailing
+        + std::string rawLine
+    }
+
+    class CommandFactory {
+        <<factory>>
+        + createCommand$(const std::string& name) Command*
+        + registerCommand$(const std::string& name, CommandCreator creator) void
+    }
+
+    class CommandHandler {
+        <<interface>>
+        + ~CommandHandler()
+        + handle(CommandContext& ctx, Client& client, const IRCMessage& msg, Command* cmd)* bool
+        + void setNext(CommandHandler* next)
+    }
+
+    class RegistrationCheckHandler {
+        <<chain>>
+        + bool handle(...)
+    }
+    class ParamCheckHandler {
+        <<chain>>
+        + bool handle(...)
+    }
+    class ExecutionHandler {
+        <<chain>>
+        + bool handle(...)
+    }
+
+    class Command {
+        <<interface>>
+        + ~Command()
+        + execute(CommandContext& ctx, Client& client, const IRCMessage& msg)* void
+        + name() const* std::string
+        + requiresRegistration() const* bool
+        + minParams() const* size_t
+    }
+
+    class XxxCommand {
+        <<command>>
+        PASS NICK USER JOIN PART PRIVMSG NOTICE
+        KICK INVITE TOPIC MODE QUIT PING CAP
+        + void execute(CommandContext& ctx, Client& client, const IRCMessage& msg)
+        + std::string name() const
+        + bool requiresRegistration() const
+        + size_t minParams() const
+    }
+
+    class CommandContext {
+        <<context>>
+        + ClientManager& clients
+        + ChannelManager& channels
+        + NickManager& nicks
+        + const std::string& password
+        + const std::string& serverName
+        - std::set~int~& outputDirty
+        - std::set~int~& closeRequests
+        + void send(Client& to, const std::string& msg)
+        + void disconnect(Client& client, const std::string& reason)
+    }
+
+    class ReplyFormatter {
+        <<formatter>>
+        + welcome$(Client* client) std::string
+        + errNeedMoreParams$(Client* client, const std::string& cmd) std::string
+        + errAlreadyRegistered$(Client* client) std::string
+        + errNoNickGiven$(Client* client) std::string
+        + errErroneusNickname$(Client* client, const std::string& nick) std::string
+        + errNicknameInUse$(Client* client, const std::string& nick) std::string
+        + errNotRegistered$(Client* client) std::string
+        + errUnknownCommand$(Client* client, const std::string& cmd) std::string
+        + rplListStart$(Client* client) std::string
+        + rplList$(Client* client, const std::string& channel) std::string
+        + rplListEnd$(Client* client) std::string
+        + rplChannelModeIs$(Client* client, const std::string& channel, const std::string& modes) std::string
+        + errNotOnChannel$(Client* client, const std::string& channel) std::string
+        + errNeedReNick$(Client* client) std::string
+    }
+
+    class Client
+    class ClientManager
+    class ChannelManager
+    class NickManager
+
+    IRCService *-- CommandDispatcher : owns
+    IRCService *-- ClientManager : owns
+    IRCService *-- ChannelManager : owns
+    IRCService *-- NickManager : owns
+
+    CommandDispatcher *-- CommandContext : owns (creates in constructor)
+    CommandDispatcher ..> IRCParser : parses with
+    CommandDispatcher ..> CommandFactory : gets commands from
+    CommandDispatcher o-- CommandHandler : chain head
+    CommandDispatcher --> IRCMessage : consumes
+
+    IRCParser --> IRCMessage : produces
+    CommandFactory ..> Command : creates
+
+    CommandHandler <|.. RegistrationCheckHandler
+    CommandHandler <|.. ParamCheckHandler
+    CommandHandler <|.. ExecutionHandler
+    ExecutionHandler ..> Command : calls execute
+    Command <|.. XxxCommand
+
+    CommandContext o-- ClientManager
+    CommandContext o-- ChannelManager
+    CommandContext o-- NickManager
+    CommandContext ..> Client : appends output to
+
+    XxxCommand ..> CommandContext : uses
+    XxxCommand ..> ReplyFormatter : uses
