@@ -34,9 +34,8 @@
 
 set -euo pipefail
 
-REPO="LuisGrigore/ft-irc"
-OWNER="LuisGrigore"
-REPO_NAME="ft-irc"
+# Derive OWNER/REPO from the origin remote (supports SSH and HTTPS URLs)
+REPO=$(git remote get-url origin | sed -E 's#^(git@github\.com:|https://github\.com/)##; s#\.git$##')
 
 # Colors for output
 RED='\033[0;31m'

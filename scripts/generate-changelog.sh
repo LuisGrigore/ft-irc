@@ -2,33 +2,46 @@
 #
 # generate-changelog.sh - Script to automatically generate and update CHANGELOG.md.
 #
-# Parses commits using the project's conventional commit format:
+# Parses commits using the conventional commit format:
 #   <type>: <short description> [(<TRACEABILITY_ID>)] [Closes #<ISSUE_NUMBER>]
 #
 # Extracts traceability IDs (FEAT/T/HOTFIX/DEVOPS/AC) and issue numbers,
 # groups changes by category, and generates CHANGELOG.md with links to
-# GitHub issues and commits.
+# the hosting platform (issues and commits).
+#
+# The script is repository-agnostic: the base URL used for links is derived from
+# the git remote, so it works unchanged in any repository. If no usable remote is
+# found, entries are generated without links.
 #
 # Usage:
 #   ./scripts/generate-changelog.sh [mode] [output-file]
 #
 # Modes:
 #   release  - Generate from the last tag to HEAD (for releases)
-#   sync     - Generate from develop to main (for sync PRs)
-#   all      - Generate from the beginning of history (full changelog)
+#   sync     - Generate from the main branch to the develop branch (for sync PRs)
+#   all      - Generate the full history
+#
+# Environment variables (all optional):
+#   REMOTE          Remote used to build links and resolve branches (default: origin)
+#   MAIN_BRANCH     Name of the main branch (default: main)
+#   DEVELOP_BRANCH  Name of the develop branch (default: develop)
+#   REPO_URL        Base URL override, e.g. https://github.com/owner/repo
 #
 # Examples:
 #   ./scripts/generate-changelog.sh release CHANGELOG.md
 #   ./scripts/generate-changelog.sh sync CHANGELOG.md
-#   ./scripts/generate-changelog.sh all CHANGELOG.md
+#   MAIN_BRANCH=master ./scripts/generate-changelog.sh sync CHANGELOG.md
 #
 # After generating, review the file, commit it, and open a PR.
 
 set -euo pipefail
 
-REPO="LuisGrigore/ft-irc"
-OWNER="LuisGrigore"
-REPO_NAME="ft-irc"
+REMOTE="${REMOTE:-origin}"
+MAIN_BRANCH="${MAIN_BRANCH:-main}"
+DEVELOP_BRANCH="${DEVELOP_BRANCH:-develop}"
+
+# Base URL of the repository (e.g. https://github.com/owner/repo). Set in main().
+BASE_URL=""
 
 # Colors for output
 RED='\033[0;31m'
@@ -39,19 +52,43 @@ NC='\033[0m' # No Color
 
 # -----------------------------------------------------------------------------
 # Utility functions
+# Logs go to stderr so they never end up inside captured output (CHANGELOG.md).
 # -----------------------------------------------------------------------------
-log_info()  { echo -e "${BLUE}[INFO]${NC}  $*"; }
-log_ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $*"; }
+log_info()  { echo -e "${BLUE}[INFO]${NC}  $*" >&2; }
+log_ok()    { echo -e "${GREEN}[OK]${NC}    $*" >&2; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC}  $*" >&2; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
 # -----------------------------------------------------------------------------
-# Validate that gh is authenticated (needed for issue links)
+# Derive the repository base URL from the git remote (or REPO_URL override).
+# Handles:  git@host:owner/repo(.git)   ssh://git@host[:port]/owner/repo(.git)
+#           https://[user[:token]@]host/owner/repo(.git)
+# Prints nothing if no usable http(s) URL can be derived.
 # -----------------------------------------------------------------------------
-check_gh_auth() {
-    if ! gh auth status &>/dev/null; then
-        log_warn "GitHub CLI (gh) is not authenticated. Issue links will not be created."
+get_repo_url() {
+    if [ -n "${REPO_URL:-}" ]; then
+        echo "${REPO_URL%/}"
+        return
     fi
+
+    local remote_url=""
+    remote_url=$(git remote get-url "$REMOTE" 2>/dev/null) || remote_url=""
+    if [ -z "$remote_url" ]; then
+        return
+    fi
+
+    local url=""
+    url=$(echo "$remote_url" | sed -E \
+        -e 's#^git@([^:]+):#https://\1/#' \
+        -e 's#^ssh://[^@/]+@([^/:]+)(:[0-9]+)?/#https://\1/#' \
+        -e 's#^(https?://)[^@/]+@#\1#' \
+        -e 's#\.git$##' \
+        -e 's#/+$##')
+
+    case "$url" in
+        http://*|https://*) echo "$url" ;;
+        *) ;;
+    esac
 }
 
 # -----------------------------------------------------------------------------
@@ -94,10 +131,32 @@ extract_description() {
 }
 
 # -----------------------------------------------------------------------------
-# Get the root commit hash
+# Resolve a branch name to an existing ref.
+#   $1 = branch name
+#   $2 = preference: "remote" (use <remote>/<branch> if present) or "local"
+# Prints the ref, or nothing if the branch does not exist anywhere.
 # -----------------------------------------------------------------------------
-get_root_commit() {
-    git rev-list --max-parents=0 HEAD 2>/dev/null || echo ""
+resolve_ref() {
+    local branch="$1"
+    local prefer="$2"
+    local remote_ref="refs/remotes/${REMOTE}/${branch}"
+    local local_ref="refs/heads/${branch}"
+
+    if [ "$prefer" = "remote" ]; then
+        if git rev-parse --verify --quiet "$remote_ref" >/dev/null; then
+            echo "${REMOTE}/${branch}"; return
+        fi
+        if git rev-parse --verify --quiet "$local_ref" >/dev/null; then
+            echo "$branch"; return
+        fi
+    else
+        if git rev-parse --verify --quiet "$local_ref" >/dev/null; then
+            echo "$branch"; return
+        fi
+        if git rev-parse --verify --quiet "$remote_ref" >/dev/null; then
+            echo "${REMOTE}/${branch}"; return
+        fi
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -110,28 +169,29 @@ get_commit_range() {
             local last_tag=""
             last_tag=$(git describe --tags --abbrev=0 2>/dev/null) || last_tag=""
             if [ -z "$last_tag" ]; then
-                local root=""
-                root=$(get_root_commit)
-                if [ -z "$root" ]; then
-                    echo "HEAD"
-                else
-                    echo "${root}..HEAD"
-                fi
+                echo "HEAD"
             else
                 echo "${last_tag}..HEAD"
             fi
             ;;
         sync)
-            echo "main..develop"
+            # main: prefer the remote ref (a local main is often stale)
+            # develop: prefer the local ref (may contain not-yet-pushed commits)
+            local main_ref="" develop_ref=""
+            main_ref=$(resolve_ref "$MAIN_BRANCH" remote)
+            develop_ref=$(resolve_ref "$DEVELOP_BRANCH" local)
+            if [ -z "$main_ref" ]; then
+                log_error "Branch '$MAIN_BRANCH' not found (locally or on '$REMOTE'). Set MAIN_BRANCH."
+                exit 1
+            fi
+            if [ -z "$develop_ref" ]; then
+                log_error "Branch '$DEVELOP_BRANCH' not found (locally or on '$REMOTE'). Set DEVELOP_BRANCH."
+                exit 1
+            fi
+            echo "${main_ref}..${develop_ref}"
             ;;
         all)
-            local root=""
-            root=$(get_root_commit)
-            if [ -z "$root" ]; then
-                echo "HEAD"
-            else
-                echo "${root}..HEAD"
-            fi
+            echo "HEAD"
             ;;
         *)
             log_error "Invalid mode: $mode. Use: release, sync, or all."
@@ -154,16 +214,18 @@ format_commit_entry() {
     local short_sha=""
     short_sha=$(echo "$commit_hash" | cut -c1-7)
 
-    local commit_link=""
-    if [ -n "$REPO_NAME" ] && [ -n "$OWNER" ]; then
-        commit_link="[${short_sha}](https://github.com/${OWNER}/${REPO_NAME}/commit/${commit_hash})"
-    else
-        commit_link="${short_sha}"
+    local commit_link="$short_sha"
+    if [ -n "$BASE_URL" ]; then
+        commit_link="[${short_sha}](${BASE_URL}/commit/${commit_hash})"
     fi
 
     local issue_link=""
     if [ -n "$issue_num" ]; then
-        issue_link=" [Closes #${issue_num}](https://github.com/${OWNER}/${REPO_NAME}/issues/${issue_num})"
+        if [ -n "$BASE_URL" ]; then
+            issue_link=" [Closes #${issue_num}](${BASE_URL}/issues/${issue_num})"
+        else
+            issue_link=" Closes #${issue_num}"
+        fi
     fi
 
     local trace_text=""
@@ -293,7 +355,17 @@ main() {
     local mode="${1:-release}"
     local output_file="${2:-CHANGELOG.md}"
 
-    check_gh_auth
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        log_error "Not inside a git repository."
+        exit 1
+    fi
+
+    BASE_URL=$(get_repo_url)
+    if [ -n "$BASE_URL" ]; then
+        log_info "Repository URL: $BASE_URL"
+    else
+        log_warn "Could not derive a repository URL from remote '$REMOTE'. Entries will have no links."
+    fi
 
     log_info "Generating changelog in mode: $mode"
     log_info "Output file: $output_file"
@@ -320,8 +392,8 @@ main() {
     echo "========================================================================"
     echo ""
     echo "Next steps:"
-    echo "  1. Review the generated CHANGELOG.md"
-    echo "  2. Commit the changes: git add CHANGELOG.md && git commit -m \"chore: update changelog (DEVOPS-194)\""
+    echo "  1. Review the generated $output_file"
+    echo "  2. Commit the changes: git add $output_file && git commit -m \"chore: update changelog\""
     echo "  3. Push and open a PR towards develop or main"
 }
 
