@@ -13,6 +13,8 @@
 
 TEST_GROUP(Client){};
 
+// Getters
+
 TEST(Client, GetFdReturnsCorrectValue_AC_001) {
     Client client(5);
     CHECK_EQUAL(5, client.getFd());
@@ -42,7 +44,49 @@ TEST(Client, GetHostnameReturnsCorrectValue_AC_001) {
     STRCMP_EQUAL("localhost", client.getHostname().c_str());
 }
 
-TEST(Client, NewClientIsNotAuthenticatedNorRegisteredNorClosing) {
+// Setters
+
+TEST(Client, SetNickUpdatesValue_AC_001) {
+    Client client(5);
+
+    client.setNick("testuser");
+
+    STRCMP_EQUAL("testuser", client.getNick().c_str());
+}
+
+TEST(Client, SetUsernameUpdatesValue_AC_001) {
+    Client client(5);
+
+    client.setUsername("testuser");
+
+    STRCMP_EQUAL("testuser", client.getUsername().c_str());
+}
+
+TEST(Client, SetRealnameUpdatesValue_AC_001) {
+    Client client(5);
+
+    client.setRealname("Test User");
+
+    STRCMP_EQUAL("Test User", client.getRealname().c_str());
+}
+
+TEST(Client, SetHostnameUpdatesValue_AC_001) {
+    Client client(5);
+
+    client.setHostname("localhost");
+
+    STRCMP_EQUAL("localhost", client.getHostname().c_str());
+}
+
+TEST(Client, SetFdUpdatesValue_AC_001) {
+    Client client(5);
+    client.setFd(9);
+    CHECK_EQUAL(9, client.getFd());
+}
+
+// State Flags
+
+TEST(Client, NewClientIsNotAuthenticatedNorRegisteredNorClosing_AC_001) {
     Client client(5);
     CHECK_FALSE(client.isAuthenticated());
     CHECK_FALSE(client.isRegistered());
@@ -59,13 +103,7 @@ TEST(Client, SettersUpdateStateFlags_AC_001) {
     CHECK_TRUE(client.isClosing());
 }
 
-TEST(Client, SetFdUpdatesValue_AC_001) {
-    Client client(5);
-    client.setFd(9);
-    CHECK_EQUAL(9, client.getFd());
-}
-
-TEST(Client, SettersCanResetStateFlagsToFalse) {
+TEST(Client, SettersCanResetStateFlagsToFalse_AC_001) {
     Client client(5);
     client.setAuthenticated(true);
     client.setRegistered(true);

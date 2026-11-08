@@ -33,12 +33,12 @@ class Client {
     void setHostname(const std::string& hostname);
     void setAuthenticated(bool authenticated);
     void setRegistered(bool registered);
+    void setClosing(bool closing);
 
     // Predicates
     bool isAuthenticated() const;
     bool isRegistered() const;
     bool isClosing() const;
-    void setClosing(bool closing);
 };
 
 #endif // CLIENT_HPP
