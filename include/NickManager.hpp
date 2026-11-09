@@ -25,7 +25,7 @@ class NickManager {
      * @param nick The nickname to check
      * @return true if the nickname is available, false otherwise
      */
-    bool isAvailable(const std::string& nick);
+    bool isAvailable(const std::string& nick) const;
 
     /**
      * @brief Reserves a nickname
@@ -45,7 +45,7 @@ class NickManager {
      * @param nick The nickname to check
      * @return true if the nickname is valid, false otherwise
      */
-    bool isValid(const std::string& nick);
+    bool isValid(const std::string& nick) const;
 };
 
 #endif // NICKMANAGER_HPP

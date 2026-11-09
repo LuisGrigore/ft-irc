@@ -43,10 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [9a50cd1](https://github.com/LuisGrigore/ft-irc-final/commit/9a50cd1c92889d6c41fe2a2e411b61fb7c8f57e0) initial repo setup
 - [6b71891](https://github.com/LuisGrigore/ft-irc-final/commit/6b718919bd61d2402388aa2c30a92e3d1bcd2038) initial repo setup
 
+### Hotfixes
 
+- [424d2fc](https://github.com/LuisGrigore/ft-irc-final/commit/424d2fc8c031072a29053502e77e5ec9a7701218) add-missing-const-to-isvalid-isavailible-nickmanager-methods
 
 ### Chore
 
+- [b3c8f0a](https://github.com/LuisGrigore/ft-irc-final/commit/b3c8f0a1f769c4706bb3b031e403b4449a06f529) update changelog
+- [9d73365](https://github.com/LuisGrigore/ft-irc-final/commit/9d73365cb6074365205580042a8d7c371b0af002) update changelog
 - [7760f62](https://github.com/LuisGrigore/ft-irc-final/commit/7760f6273de077ebbf4d7f8954e6498f86b37d64) update changelog
 - [6d1aca0](https://github.com/LuisGrigore/ft-irc-final/commit/6d1aca05df0216280f81a9ce2cbebc4c27d0fb7a) update changelog
 - [e6612c4](https://github.com/LuisGrigore/ft-irc-final/commit/e6612c44f20d3d4f4d39d0fd80ba3fbb91d801cc) update changelog

@@ -4,7 +4,7 @@ NickManager::NickManager() : nicks() {}
 
 NickManager::~NickManager() {}
 
-bool NickManager::isAvailable(const std::string& nick) {
+bool NickManager::isAvailable(const std::string& nick) const {
     return nicks.find(normalize(nick)) == nicks.end();
 }
 
@@ -41,7 +41,7 @@ bool NickManager::isSpecial(char c) {
            c == '|' || c == '}';
 }
 
-bool NickManager::isValid(const std::string& nick) {
+bool NickManager::isValid(const std::string& nick) const {
     if (nick.empty() || nick.size() > NICK_MAX_LENGTH)
         return false;
 
