@@ -14,7 +14,7 @@ endif()
 # The project's production include is not SYSTEM.
 set(PROJECT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
-add_executable(unit_tests unit/test_Client.cpp unit/test_ClientManager.cpp unit/test_NickManager.cpp unit/test_counter.cpp test_main.cpp)
+add_executable(unit_tests unit/test_IRCService.cpp unit/test_Client.cpp unit/test_ClientManager.cpp unit/test_NickManager.cpp unit/test_counter.cpp test_main.cpp)
 target_link_libraries(unit_tests PRIVATE ft_irc CppUTestExt CppUTest)
 target_include_directories(unit_tests PRIVATE ${PROJECT_INCLUDE_DIRS})
 target_compile_options(unit_tests PRIVATE ${TEST_WARNING_FLAGS} ${TEST_COMPILE_SANITIZER_FLAGS})
@@ -35,6 +35,7 @@ endif()
 # for project code. set_source_files_properties only affects compilation,
 # never linking (avoiding passing -isystem as linker input file).
 set_source_files_properties(
+	unit/test_IRCService.cpp
     unit/test_Client.cpp
 	unit/test_ClientManager.cpp
 	unit/test_NickManager.cpp
