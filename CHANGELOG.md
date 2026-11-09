@@ -43,7 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+### Chore
 
+- [d6f968c](https://github.com/LuisGrigore/ft-irc-final/commit/d6f968cff2790331a27427bbde7b424ee0d298d1) refactored Client and NickManager method documentation
+- [944e360](https://github.com/LuisGrigore/ft-irc-final/commit/944e360fd304648fb49a6ed5d0e9cb5e91b88cb8) update changelog
 
 
 
