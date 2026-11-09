@@ -1,8 +1,12 @@
 classDiagram
     class IRCService {
         <<orchestrator>>
-        - ChannelManager* channelManager
-        + void onClientDisconnected(int fd)
+        - ClientManager& clientManager
+        + IRCService(ClientManager& clientManager)
+        + ~IRCService()
+        + void onConnect(int fd)
+        + void onData(int fd, const std::string& data)
+        + void onDisconnect(int fd)
     }
 
     class ChannelManager {
@@ -95,7 +99,6 @@ classDiagram
 
     class Client
 
-    IRCService *-- ChannelManager : owns
     ChannelManager --> Channel : map of channels
     Channel --> Client : members / operators / invited / creator
     Channel *-- ChannelMode : owns strategies

@@ -111,7 +111,7 @@ features:
       - id: AC-004
         description: "`NickManager` unit tests pass for reserve/release/isAvailable/isValid"
       - id: AC-005
-        description: "`IRCService` compiles with `ClientManager` and `NickManager` ownership"
+        description: "`IRCService` compiles with `ClientManager` reference"
       - id: AC-006
         description: "Nickname collisions are rejected"
     tasks:
@@ -128,7 +128,7 @@ features:
         tdd_step: Refactor
         related_elements: ["irc_clients.mmd"]
       - id: T-004
-        description: "Write unit tests for `Client` buffer operations (`appendInput`, `popLine`, `appendOutput`, `takeOutput`)"
+        description: "Write unit tests for `Client` buffer operations (`pushInput`, `getNextInputLine`, `pushOutput`, `peekOutput`, `consumeOutput`)"
         tdd_step: Red
         related_elements: ["irc_clients.mmd"]
       - id: T-005
@@ -163,12 +163,24 @@ features:
         description: "Refactor `NickManager` validation logic"
         tdd_step: Refactor
         related_elements: ["irc_clients.mmd"]
+      - id: T-151
+        description: "Write unit tests for `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients)"
+        tdd_step: Red
+        related_elements: ["irc_clients.mmd"]
+      - id: T-152
+        description: "Implement `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients)"
+        tdd_step: Green
+        related_elements: ["irc_clients.mmd"]
+      - id: T-153
+        description: "Refactor `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients)"
+        tdd_step: Refactor
+        related_elements: ["irc_clients.mmd"]
       - id: T-013
-        description: "Write unit tests for `IRCService` lifecycle (onClientConnected/onClientData/onClientDisconnected/tick)"
+        description: "Write unit tests for `IRCService` lifecycle (onConnect/onData/onDisconnect)"
         tdd_step: Red
         related_elements: ["irc_clients.mmd", "irc_network_layer_pull.mmd"]
       - id: T-014
-        description: "Implement `IRCService` orchestrator (password, dirtyClients sets, tick method)"
+        description: "Implement `IRCService` orchestrator (ClientManager reference, onConnect/onData/onDisconnect lifecycle)"
         tdd_step: Green
         related_elements: ["irc_clients.mmd", "irc_network_layer_pull.mmd"]
       - id: T-015

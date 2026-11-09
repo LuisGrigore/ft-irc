@@ -32,18 +32,14 @@ classDiagram
 
     class IRCService {
         <<orchestrator>>
-        - std::string password
-        - std::set~int~ dirtyClients
-        + IRCService(const std::string& password)
+        - ClientManager& clientManager
+        + IRCService(ClientManager& clientManager)
         + ~IRCService()
-        + void onClientConnected(int fd)
-        + void onClientData(int fd, const std::string& data)
-        + void onClientDisconnected(int fd)
-        + TickResult tick()
+        + void onConnect(int fd)
+        + void onData(int fd, const std::string& data)
+        + void onDisconnect(int fd)
     }
 
-    SocketService <|.. IRCService : implements
     SocketServer --> SocketService : consumes (callbacks + tick)
     SocketService ..> TickResult : returns
     SocketServer ..> TickResult : reads
-    IRCService ..> TickResult : builds
