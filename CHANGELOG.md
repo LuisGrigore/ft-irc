@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Chore
 
+- [9d73365](https://github.com/LuisGrigore/ft-irc-final/commit/9d73365cb6074365205580042a8d7c371b0af002) update changelog
 - [7760f62](https://github.com/LuisGrigore/ft-irc-final/commit/7760f6273de077ebbf4d7f8954e6498f86b37d64) update changelog
 - [6d1aca0](https://github.com/LuisGrigore/ft-irc-final/commit/6d1aca05df0216280f81a9ce2cbebc4c27d0fb7a) update changelog
 - [e6612c4](https://github.com/LuisGrigore/ft-irc-final/commit/e6612c44f20d3d4f4d39d0fd80ba3fbb91d801cc) update changelog
