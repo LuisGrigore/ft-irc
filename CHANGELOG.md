@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Devops
 
+- [04a6425](https://github.com/LuisGrigore/ft-irc-final/commit/04a64258fb511139c9330658da05981a90935ae7) implement commit.sh script Closes #165 (**DEVOPS-001**) [Closes #165](https://github.com/LuisGrigore/ft-irc-final/issues/165)
 - [c5137e4](https://github.com/LuisGrigore/ft-irc-final/commit/c5137e4e0ef0c0d8cfa389c12924e60d931e6d0f) initial repo setup
 - [9a50cd1](https://github.com/LuisGrigore/ft-irc-final/commit/9a50cd1c92889d6c41fe2a2e411b61fb7c8f57e0) initial repo setup
 - [6b71891](https://github.com/LuisGrigore/ft-irc-final/commit/6b718919bd61d2402388aa2c30a92e3d1bcd2038) initial repo setup
@@ -45,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Chore
 
+- [e6612c4](https://github.com/LuisGrigore/ft-irc-final/commit/e6612c44f20d3d4f4d39d0fd80ba3fbb91d801cc) update changelog
 - [d6f968c](https://github.com/LuisGrigore/ft-irc-final/commit/d6f968cff2790331a27427bbde7b424ee0d298d1) refactored Client and NickManager method documentation
 - [944e360](https://github.com/LuisGrigore/ft-irc-final/commit/944e360fd304648fb49a6ed5d0e9cb5e91b88cb8) update changelog
 
