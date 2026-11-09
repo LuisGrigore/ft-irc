@@ -20,6 +20,7 @@ void ClientManager::removeClient(int fd) {
     if (it != clients.end()) {
         delete it->second;
         clients.erase(it);
+		dirtyClients.erase(fd);
     }
 }
 
@@ -47,3 +48,15 @@ std::vector<Client*> ClientManager::listClients() const {
     }
     return clientList;
 }
+
+void ClientManager::setDirty(int fd, bool isDirty) {
+    if (isDirty) {
+        dirtyClients.insert(fd);
+    } else {
+        dirtyClients.erase(fd);
+    }
+}
+
+std::set<int> ClientManager::getDirtyClients() const { return dirtyClients; }
+
+bool ClientManager::isDirty(int fd) const { return dirtyClients.find(fd) != dirtyClients.end(); }
