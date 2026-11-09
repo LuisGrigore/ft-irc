@@ -65,6 +65,24 @@ TEST(NickManager, IsAvailableTracksEachNickIndependently_AC_004) {
 
 // Reserve
 
+TEST(NickManager, ReserveReturnsFalseForInvalidNick_AC_004) {
+    NickManager manager;
+
+    CHECK_FALSE(manager.reserve(""));
+    CHECK_FALSE(manager.reserve("1alice"));
+    CHECK_FALSE(manager.reserve("ali ce"));
+    CHECK_FALSE(manager.reserve("#alice"));
+    CHECK_FALSE(manager.reserve("abcdefghijklmnopqrstuvwxyz12345"));
+}
+
+TEST(NickManager, ReserveDoesNotStoreInvalidNick_AC_004) {
+    NickManager manager;
+
+    manager.reserve("1alice");
+
+    CHECK_TRUE(manager.isAvailable("1alice"));
+}
+
 TEST(NickManager, ReserveReturnsTrueForAvailableNick_AC_004) {
     NickManager manager;
 
