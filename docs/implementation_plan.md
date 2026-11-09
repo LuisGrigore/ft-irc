@@ -43,7 +43,7 @@ Each element has a unique traceability ID:
 | T-001 | Write unit tests for `Client` getters/setters (nick, username, realname, hostname, authenticated, registered, closing) | Red | FEAT-001 | `irc_clients.mmd` |
 | T-002 | Implement `Client` class fields and getter/setter methods | Green | FEAT-001 | `irc_clients.mmd` |
 | T-003 | Refactor `Client` for C++98 compliance and warning-free compilation | Refactor | FEAT-001 | `irc_clients.mmd` |
-| T-004 | Write unit tests for `Client` buffer operations (`appendInput`, `popLine`, `appendOutput`, `takeOutput`) | Red | FEAT-001 | `irc_clients.mmd` |
+| T-004 | Write unit tests for `Client` buffer operations (`pushInput`, `getNextInputLine`, `pushOutput`, `peekOutput`, `consumeOutput`) | Red | FEAT-001 | `irc_clients.mmd` |
 | T-005 | Implement `Client` input/output buffer methods | Green | FEAT-001 | `irc_clients.mmd` |
 | T-006 | Refactor `Client` buffer logic | Refactor | FEAT-001 | `irc_clients.mmd` |
 | T-007 | Write unit tests for `ClientManager` (add, remove, find by fd/nick, list) | Red | FEAT-001 | `irc_clients.mmd` |
@@ -52,8 +52,11 @@ Each element has a unique traceability ID:
 | T-010 | Write unit tests for `NickManager` (reserve, release, isAvailable, isValid) | Red | FEAT-001 | `irc_clients.mmd` |
 | T-011 | Implement `NickManager` registry (set of nicks) | Green | FEAT-001 | `irc_clients.mmd` |
 | T-012 | Refactor `NickManager` validation logic | Refactor | FEAT-001 | `irc_clients.mmd` |
-| T-013 | Write unit tests for `IRCService` lifecycle (onClientConnected/onClientData/onClientDisconnected/tick) | Red | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
-| T-014 | Implement `IRCService` orchestrator (password, dirtyClients sets, tick method) | Green | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
+| T-151 | Write unit tests for `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients) | Red | FEAT-001 | `irc_clients.mmd` |
+| T-152 | Implement `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients) | Green | FEAT-001 | `irc_clients.mmd` |
+| T-153 | Refactor `ClientManager` dirtyClients set (setDirty, isDirty, getDirtyClients) | Refactor | FEAT-001 | `irc_clients.mmd` |
+| T-013 | Write unit tests for `IRCService` lifecycle (onConnect/onData/onDisconnect) | Red | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
+| T-014 | Implement `IRCService` orchestrator (ClientManager reference, onConnect/onData/onDisconnect lifecycle) | Green | FEAT-001 | `irc_clients.mmd`, `irc_network_layer_pull.mmd` |
 | T-015 | Refactor `IRCService` orchestration logic | Refactor | FEAT-001 | `irc_clients.mmd` |
 | T-016 | Write unit tests for `TickResult` struct fields and default values | Red | FEAT-002 | `irc_network_layer_pull.mmd` |
 | T-017 | Implement `TickResult` struct | Green | FEAT-002 | `irc_network_layer_pull.mmd` |
@@ -201,7 +204,7 @@ Each element has a unique traceability ID:
 | AC-002 | `Client` buffer unit tests pass | FEAT-001 |
 | AC-003 | `ClientManager` unit tests pass for add/remove/find operations | FEAT-001 |
 | AC-004 | `NickManager` unit tests pass for reserve/release/isAvailable/isValid | FEAT-001 |
-| AC-005 | `IRCService` compiles with `ClientManager` and `NickManager` ownership | FEAT-001 |
+| AC-005 | `IRCService` compiles with `ClientManager` reference | FEAT-001 |
 | AC-006 | Nickname collisions are rejected | FEAT-001 |
 | AC-007 | `TickResult` unit tests pass | FEAT-002 |
 | AC-008 | `SocketService` interface compiles as pure abstract class | FEAT-002 |
@@ -295,7 +298,7 @@ Tasks are ordered so that tests for a feature are written before or alongside th
 
 Derived from `irc_clients.mmd` (IRCService orchestrator, Client entity, ClientManager/NickManager registries).
 
-**Tasks:** T-001 to T-015  
+**Tasks:** T-001 to T-015, T-151 to T-153  
 **Acceptance Criteria:** AC-001 to AC-006  
 **Depends on:** None
 

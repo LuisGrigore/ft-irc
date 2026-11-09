@@ -1,38 +1,101 @@
 classDiagram
     class IRCService {
         <<orchestrator>>
-        - std::string password
-        - std::set~int~ dirtyClients
-        - std::set~int~ outputDirty
-        - std::set~int~ closeRequests
-        - ClientManager* clientManager
-        - NickManager* nickManager
-        - ChannelManager* channelManager
-        + void onClientConnected(int fd)
-        + void onClientData(int fd, const std::string& data)
-        + void onClientDisconnected(int fd)
-        + TickResult tick()
+        - ClientManager& clientManager
+        + IRCService(ClientManager& clientManager)
+        + ~IRCService()
+        + void onConnect(int fd)
+        + void onData(int fd, const std::string& data)
+        + void onDisconnect(int fd)
     }
 
     class Client {
         <<entity>>
         - int fd
+        - std::string nick
+        - std::string username
+        - std::string realname
+        - std::string hostname
+        - bool authenticated
+        - bool registered
         - bool closing
+        - ClientBuffer inputBuffer
+        - ClientBuffer outputBuffer
+        + Client(int fd)
+        + ~Client()
+        + int getFd() const
+        + const std::string& getNick() const
+        + const std::string& getUsername() const
+        + const std::string& getRealname() const
+        + const std::string& getHostname() const
+        + void setFd(int fd)
+        + void setNick(const std::string& nick)
+        + void setUsername(const std::string& username)
+        + void setRealname(const std::string& realname)
+        + void setHostname(const std::string& hostname)
+        + void setAuthenticated(bool authenticated)
+        + void setRegistered(bool registered)
+        + void setClosing(bool closing)
+        + bool isAuthenticated() const
+        + bool isRegistered() const
         + bool isClosing() const
-        + void setClosing(bool value)
+        + bool isInputBufferEmpty() const
+        + bool isOutputBufferEmpty() const
+        + void pushInput(const std::string& data)
+        + void pushInput(char data)
+        + void pushInput(const char* data)
+        + bool getNextInputLine(std::string& line)
+        + void pushOutput(const std::string& data)
+        + void pushOutput(char data)
+        + void pushOutput(const char* data)
+        + std::string peekOutput(size_t length) const
+        + void consumeOutput(size_t length)
+    }
+
+    class ClientBuffer {
+        - std::string buffer
+        + ClientBuffer()
+        + ~ClientBuffer()
+        + void push(const std::string& data)
+        + void push(char data)
+        + void push(const char* data)
+        + std::string peek(size_t length) const
+        + void consume(size_t length)
+        + bool empty() const
+        + size_t size() const
+        + void clear()
     }
 
     class ClientManager {
         <<registry>>
         - std::map~int, Client*~ clients
+        - std::set~int~ dirtyClients
+        + ClientManager()
+        + ~ClientManager()
         + Client* findClient(int fd)
+        + Client* findClient(const std::string& nick)
+        + void addClient(int fd)
         + void removeClient(int fd)
+        + std::vector~Client*~ listClients() const
+        + void setDirty(int fd, bool isDirty)
+        + std::set~int~ getDirtyClients() const
+        + bool isDirty(int fd) const
     }
 
     class NickManager {
         <<registry>>
         - std::set~std::string~ nicks
+        - static const std::string::size_type NICK_MAX_LENGTH
+        + NickManager()
+        + ~NickManager()
+        + bool isAvailable(const std::string& nick) const
+        + bool reserve(const std::string& nick)
         + void release(const std::string& nick)
+        + bool isValid(const std::string& nick) const
+        - static bool isLetter(char c)
+        - static bool isDigit(char c)
+        - static bool isSpecial(char c)
+        + static std::string normalize(const std::string& nick)
     }
 
     class ChannelManager {
@@ -48,12 +111,12 @@ classDiagram
         - std::set~Client*~ operators
     }
 
-    IRCService *-- ClientManager : owns
-    IRCService *-- NickManager : owns
-    IRCService *-- ChannelManager : owns
+    IRCService --> ClientManager : uses (reference)
     ClientManager --> Client : map of clients
     ChannelManager --> Channel : map of channels
     Channel --> Client : members / operators
+    Client *-- ClientBuffer : input / output buffers
+    ClientManager ..> NickManager : nickname registry
 
     note "Graceful disconnection flow:" as N1
     note N1: onClientDisconnected(fd) →\nClientManager.removeClient(fd) →\nNickManager.release(nick) →\nChannelManager.removeClientFromAll(client)
