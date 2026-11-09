@@ -8,6 +8,14 @@ class NickManager {
   private:
     std::set<std::string> nicks;
 
+    static const std::string::size_type NICK_MAX_LENGTH = 30;
+
+    static bool isLetter(char c);
+    static bool isDigit(char c);
+    static bool isSpecial(char c);
+
+    static std::string normalize(const std::string& nick);
+
   public:
     NickManager();
     ~NickManager();
