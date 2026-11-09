@@ -227,6 +227,17 @@ TEST(ClientManager, RemoveClientMakesClientNotFindableByFd_AC_003) {
     CHECK_TRUE(manager.findClient(5) == NULL);
 }
 
+TEST(ClientManager, RemoveClientMakesClientNotDirty_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+
+    manager.removeClient(5);
+
+    CHECK_TRUE(manager.findClient(5) == NULL);
+    CHECK_FALSE(manager.isDirty(5));
+}
+
 TEST(ClientManager, RemoveClientMakesClientNotFindableByNick_AC_003) {
     ClientManager manager;
     manager.addClient(5);
@@ -393,4 +404,254 @@ TEST(ClientManager, ListClientsIsCallableOnConstManager_AC_003) {
     const ClientManager& constManager = manager;
 
     CHECK_EQUAL(1, (int)constManager.listClients().size());
+}
+
+// Dirty Clients
+
+TEST(ClientManager, IsDirtyReturnsFalseWhenManagerIsEmpty_AC_003) {
+    ClientManager manager;
+
+    CHECK_FALSE(manager.isDirty(5));
+}
+
+TEST(ClientManager, IsDirtyReturnsFalseForNewlyAddedClient_AC_003) {
+    ClientManager manager;
+
+    manager.addClient(5);
+
+    CHECK_FALSE(manager.isDirty(5));
+}
+
+TEST(ClientManager, IsDirtyReturnsFalseForUnknownFd_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+
+    CHECK_FALSE(manager.isDirty(99));
+}
+
+TEST(ClientManager, GetDirtyClientsReturnsEmptySetWhenManagerIsEmpty_AC_003) {
+    ClientManager manager;
+
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, GetDirtyClientsReturnsEmptySetForNewlyAddedClients_AC_003) {
+    ClientManager manager;
+
+    manager.addClient(5);
+    manager.addClient(6);
+
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, SetDirtyTrueMarksClientAsDirty_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.setDirty(5, true);
+
+    CHECK_TRUE(manager.isDirty(5));
+}
+
+TEST(ClientManager, SetDirtyTrueAddsFdToDirtyClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.setDirty(5, true);
+
+    std::set<int> dirty = manager.getDirtyClients();
+    CHECK_EQUAL(1, (int)dirty.size());
+    CHECK_EQUAL(1, (int)dirty.count(5));
+}
+
+TEST(ClientManager, SetDirtyFalseClearsDirtyStatus_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+
+    manager.setDirty(5, false);
+
+    CHECK_FALSE(manager.isDirty(5));
+}
+
+TEST(ClientManager, SetDirtyFalseRemovesFdFromDirtyClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+
+    manager.setDirty(5, false);
+
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, SetDirtyFalseOnCleanClientDoesNothing_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.setDirty(5, false);
+
+    CHECK_FALSE(manager.isDirty(5));
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, SetDirtyTrueTwiceKeepsSingleEntry_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.setDirty(5, true);
+    manager.setDirty(5, true);
+
+    CHECK_TRUE(manager.isDirty(5));
+    CHECK_EQUAL(1, (int)manager.getDirtyClients().size());
+}
+
+TEST(ClientManager, SetDirtyCanBeToggledMultipleTimes_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.setDirty(5, true);
+    manager.setDirty(5, false);
+    manager.setDirty(5, true);
+
+    CHECK_TRUE(manager.isDirty(5));
+    CHECK_EQUAL(1, (int)manager.getDirtyClients().size());
+}
+
+TEST(ClientManager, SetDirtyOnlyAffectsGivenClient_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+
+    manager.setDirty(5, true);
+
+    CHECK_TRUE(manager.isDirty(5));
+    CHECK_FALSE(manager.isDirty(6));
+}
+
+TEST(ClientManager, ClearingOneClientKeepsOthersDirty_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+    manager.setDirty(5, true);
+    manager.setDirty(6, true);
+
+    manager.setDirty(5, false);
+
+    CHECK_FALSE(manager.isDirty(5));
+    CHECK_TRUE(manager.isDirty(6));
+}
+
+TEST(ClientManager, GetDirtyClientsReturnsAllDirtyClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+    manager.addClient(7);
+
+    manager.setDirty(5, true);
+    manager.setDirty(7, true);
+
+    std::set<int> dirty = manager.getDirtyClients();
+    CHECK_EQUAL(2, (int)dirty.size());
+    CHECK_EQUAL(1, (int)dirty.count(5));
+    CHECK_EQUAL(0, (int)dirty.count(6));
+    CHECK_EQUAL(1, (int)dirty.count(7));
+}
+
+TEST(ClientManager, GetDirtyClientsDoesNotContainClearedClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+    manager.setDirty(5, true);
+    manager.setDirty(6, true);
+
+    manager.setDirty(5, false);
+
+    std::set<int> dirty = manager.getDirtyClients();
+    CHECK_EQUAL(1, (int)dirty.size());
+    CHECK_EQUAL(0, (int)dirty.count(5));
+    CHECK_EQUAL(1, (int)dirty.count(6));
+}
+
+TEST(ClientManager, ModifyingReturnedDirtySetDoesNotAffectManager_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+    manager.setDirty(5, true);
+
+    std::set<int> dirty = manager.getDirtyClients();
+    dirty.clear();
+    dirty.insert(6);
+
+    CHECK_TRUE(manager.isDirty(5));
+    CHECK_FALSE(manager.isDirty(6));
+    CHECK_EQUAL(1, (int)manager.getDirtyClients().size());
+}
+
+TEST(ClientManager, DirtyStatusDoesNotAffectManagedClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    Client* client = manager.findClient(5);
+
+    manager.setDirty(5, true);
+
+    POINTERS_EQUAL(client, manager.findClient(5));
+    CHECK_EQUAL(1, (int)manager.listClients().size());
+}
+
+TEST(ClientManager, DirtyStatusIsIndependentFromClientState_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+
+    manager.findClient(5)->setNick("testuser");
+    manager.findClient(5)->setAuthenticated(true);
+
+    CHECK_FALSE(manager.isDirty(5));
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, IsDirtyIsCallableOnConstManager_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+    const ClientManager& constManager = manager;
+
+    CHECK_TRUE(constManager.isDirty(5));
+}
+
+TEST(ClientManager, GetDirtyClientsIsCallableOnConstManager_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+    const ClientManager& constManager = manager;
+
+    CHECK_EQUAL(1, (int)constManager.getDirtyClients().size());
+}
+
+TEST(ClientManager, SetDirtyFalseTwiceIsIdempotent_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.setDirty(5, true);
+
+    manager.setDirty(5, false);
+    manager.setDirty(5, false);
+
+    CHECK_FALSE(manager.isDirty(5));
+    CHECK_TRUE(manager.getDirtyClients().empty());
+}
+
+TEST(ClientManager, SetDirtyTrueRepeatedlyDoesNotAffectOtherDirtyClients_AC_003) {
+    ClientManager manager;
+    manager.addClient(5);
+    manager.addClient(6);
+    manager.setDirty(6, true);
+
+    manager.setDirty(5, true);
+    manager.setDirty(5, true);
+    manager.setDirty(5, true);
+
+    std::set<int> dirty = manager.getDirtyClients();
+    CHECK_EQUAL(2, (int)dirty.size());
+    CHECK_EQUAL(1, (int)dirty.count(5));
+    CHECK_EQUAL(1, (int)dirty.count(6));
 }
