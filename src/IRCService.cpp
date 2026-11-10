@@ -22,3 +22,8 @@ void IRCService::onDisconnect(int fd) {
     if (client != NULL)
         clientManager.removeClient(fd);
 }
+
+TickResult IRCService::tick() {
+    // Implement the logic for processing dirty clients and generating outputs and toClose lists
+    return TickResult();
+}

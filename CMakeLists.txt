@@ -68,7 +68,7 @@ target_compile_options(CppUTestExt PRIVATE
 # -----------------------------------------------------------------------------
 # Production library
 # -----------------------------------------------------------------------------
-add_library(ft_irc STATIC src/counter.cpp src/Client.cpp src/ClientManager.cpp src/NickManager.cpp src/IRCService.cpp)
+add_library(ft_irc STATIC src/counter.cpp src/Client.cpp src/ClientManager.cpp src/NickManager.cpp src/IRCService.cpp src/TickResult.cpp)
 target_include_directories(ft_irc PUBLIC include)
 target_compile_options(ft_irc PRIVATE ${PROJECT_WARNING_FLAGS})
 
