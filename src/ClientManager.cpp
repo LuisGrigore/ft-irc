@@ -57,6 +57,6 @@ void ClientManager::setDirty(int fd, bool isDirty) {
     }
 }
 
-std::set<int> ClientManager::getDirtyClients() const { return dirtyClients; }
+const std::set<int> ClientManager::getDirtyClients() const { return dirtyClients; }
 
 bool ClientManager::isDirty(int fd) const { return dirtyClients.find(fd) != dirtyClients.end(); }

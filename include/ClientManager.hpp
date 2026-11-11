@@ -65,7 +65,7 @@ class ClientManager {
      * be processed.
      * @return A set containing the file descriptors of dirty clients.
      */
-    std::set<int> getDirtyClients() const;
+    const std::set<int> getDirtyClients() const;
 
     /**
      * @brief Checks if a client has been modified and needs to be processed.
