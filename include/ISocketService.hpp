@@ -28,9 +28,10 @@ class ISocketService {
 
     /**
      * @brief Performs a tick iteration, handling socket events and returning the result
+     * @param consumedBytes A map of the consummed bytes by the fds <fd,consumedBytes>
      * @return TickResult containing the outputs and file descriptors to close
      */
-    virtual TickResult tick() = 0;
+    virtual TickResult tick(const std::map<int,int>& consumedBytes) = 0;
 };
 
 #endif // ISOCKETSERVICE_HPP

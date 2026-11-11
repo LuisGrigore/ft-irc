@@ -34,9 +34,11 @@ class IRCService : public ISocketService {
 
     /**
      * @brief Performs a tick iteration, handling socket events and returning the result
+     * @param consumedBytes A vector of ConsumedBytes representing the number of bytes consumed from
+     * each file descriptor during the previous tick
      * @return TickResult containing the outputs and file descriptors to close
      */
-    virtual TickResult tick();
+    virtual TickResult tick(const std::map<int, int>& consumedBytes);
 };
 
 #endif // IRCSERVICE_HPP

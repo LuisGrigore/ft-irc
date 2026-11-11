@@ -2,38 +2,28 @@
 #define TICKRESULT_HPP
 
 #include <string>
-#include <vector>
+#include <set>
+#include <map>
 
 /**
  * @brief Represents the result of a tick iteration comming from a ISocketService implementation
  * instance
  */
 struct TickResult {
-    /**
-     * @brief Represents an output to be sent to a file descriptor
-     */
-    struct Output {
-        int fd;
-        std::string data;
-
-        Output();
-
-        Output(int fd, const std::string& data);
-    };
 
     /**
-     * @brief Represents the outputs to be sent to each file descriptor in this tick
+     * @brief Represents the outputs to be sent to each file descriptor in this tick <fd, output>
      */
-    std::vector<Output> outputs;
+    std::map<int,std::string> outputs;
 
     /**
      * @brief Represents the file descriptors to be closed in this tick
      */
-    std::vector<int> toClose;
+    std::set<int> toClose;
 
     TickResult();
 
-    TickResult(const std::vector<Output>& outputs, const std::vector<int>& toClose);
+    TickResult(const std::map<int,std::string>& outputs, const std::set<int>& toClose);
 };
 
 #endif // TICKRESULT_HPP
